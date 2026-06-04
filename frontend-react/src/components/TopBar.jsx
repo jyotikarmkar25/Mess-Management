@@ -17,7 +17,7 @@ const TopBar = ({ sectionTitle, onProfileClick }) => {
                     <i className={`fas ${theme === 'light' ? 'fa-moon' : 'fa-sun'}`}></i>
                 </button>
                 <div className="utility-divider" style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 8px' }}></div>
-                <span id="user-greeting">{user?.username || 'User'}</span>
+                <span id="user-greeting">{user?.name || user?.displayName || user?.email || 'User'}</span>
                 <div className="top-bar-profile" onClick={onProfileClick}>
                     <img id="top-profile-img" src={profilePhoto} alt="Profile" />
                 </div>

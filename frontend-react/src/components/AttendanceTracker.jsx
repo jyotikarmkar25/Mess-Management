@@ -1,20 +1,55 @@
-import React, { useState } from 'react';
-
-const initialAttendance = [
-    { meal: 'Breakfast', status: 'present' },
-    { meal: 'Lunch', status: 'present' },
-    { meal: 'Snacks', status: 'absent' },
-    { meal: 'Dinner', status: 'absent' }
-];
+import React, { useState, useEffect } from 'react';
+import { db, auth } from '../firebase';
+import { collection, addDoc, query, where, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
 const AttendanceTracker = () => {
-    const [attendance, setAttendance] = useState(initialAttendance);
+    const meals = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+    const [attendance, setAttendance] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const toggleStatus = (index) => {
-        const newAttendance = [...attendance];
-        newAttendance[index].status = newAttendance[index].status === 'present' ? 'absent' : 'present';
-        setAttendance(newAttendance);
+    useEffect(() => {
+        if (!auth.currentUser) return;
+
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const q = query(
+            collection(db, 'attendance'),
+            where('uid', '==', auth.currentUser.uid),
+            where('timestamp', '>=', today)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => doc.data().meal);
+            setAttendance(data);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const toggleStatus = async (meal) => {
+        if (!auth.currentUser) return;
+        
+        if (attendance.includes(meal)) {
+            alert("You have already marked attendance for this meal today.");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, 'attendance'), {
+                uid: auth.currentUser.uid,
+                userName: auth.currentUser.displayName || auth.currentUser.email,
+                meal: meal,
+                status: 'present',
+                timestamp: serverTimestamp()
+            });
+        } catch (error) {
+            alert("Error marking attendance: " + error.message);
+        }
     };
+
+    if (loading) return <div>Loading traces...</div>;
 
     return (
         <div id="attendance" className="content-section active">
@@ -26,18 +61,19 @@ const AttendanceTracker = () => {
                 <div id="attendance-list" className="attendance-card">
                     <div className="table-header" style={{ display: 'flex', padding: '0.75rem 1.5rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                         <div style={{ flex: 1 }}>Meal Trace</div>
-                        <div style={{ width: '100px', textAlign: 'center' }}>Status</div>
+                        <div style={{ width: '120px', textAlign: 'center' }}>Action</div>
                     </div>
-                    {attendance.map((record, index) => (
+                    {meals.map((meal, index) => (
                         <div key={index} className="meal-row" style={{ display: 'flex', alignItems: 'center' }}>
-                            <div style={{ flex: 1, fontWeight: '600', fontSize: '0.9rem' }}>{record.meal}</div>
-                            <div style={{ width: '100px', textAlign: 'center' }}>
+                            <div style={{ flex: 1, fontWeight: '600', fontSize: '0.9rem' }}>{meal}</div>
+                            <div style={{ width: '120px', textAlign: 'center' }}>
                                 <button 
-                                    className={`btn-check ${record.status === 'absent' ? 'outline' : ''}`}
-                                    onClick={() => toggleStatus(index)}
+                                    className={`btn-check ${attendance.includes(meal) ? '' : 'outline'}`}
+                                    onClick={() => toggleStatus(meal)}
                                     style={{ width: '100%' }}
+                                    disabled={attendance.includes(meal)}
                                 >
-                                    {record.status}
+                                    {attendance.includes(meal) ? 'Present' : 'Mark Present'}
                                 </button>
                             </div>
                         </div>

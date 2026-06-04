@@ -1,15 +1,38 @@
 import React, { useState } from 'react';
+import { db, auth } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const FeedbackForm = () => {
     const [rating, setRating] = useState(4);
     const [meal, setMeal] = useState('Breakfast');
     const [comments, setComments] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert('Thank you for your feedback! It has been submitted successfully.');
-        setComments('');
-        setRating(4);
+        if (!auth.currentUser) {
+            alert('You must be logged in to submit feedback.');
+            return;
+        }
+        
+        setSubmitting(true);
+        try {
+            await addDoc(collection(db, 'feedback'), {
+                uid: auth.currentUser.uid,
+                userName: auth.currentUser.displayName || auth.currentUser.email,
+                meal,
+                rating,
+                comments,
+                timestamp: serverTimestamp()
+            });
+            alert('Thank you for your feedback! It has been submitted successfully.');
+            setComments('');
+            setRating(4);
+        } catch (error) {
+            alert('Error submitting feedback: ' + error.message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -28,13 +51,13 @@ const FeedbackForm = () => {
                     </div>
                     <div className="form-group">
                         <label>Rating</label>
-                        <div className="stars">
+                        <div className="stars" style={{ display: 'flex', gap: '8px', fontSize: '1.5rem', margin: '0.5rem 0' }}>
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <i 
                                     key={star}
                                     className={`${star <= rating ? 'fas' : 'far'} fa-star`}
                                     onClick={() => setRating(star)}
-                                    style={{ cursor: 'pointer' }}
+                                    style={{ cursor: 'pointer', color: star <= rating ? 'var(--warning)' : 'var(--text-muted)' }}
                                 ></i>
                             ))}
                         </div>
@@ -45,9 +68,12 @@ const FeedbackForm = () => {
                             placeholder="How was the food today?"
                             value={comments}
                             onChange={(e) => setComments(e.target.value)}
+                            rows="4"
                         ></textarea>
                     </div>
-                    <button type="submit" className="submit-btn">Submit Feedback</button>
+                    <button type="submit" className="submit-btn" disabled={submitting}>
+                        {submitting ? 'Submitting...' : 'Submit Feedback'}
+                    </button>
                 </form>
             </div>
         </div>
