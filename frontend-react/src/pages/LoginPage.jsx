@@ -10,23 +10,20 @@ const LoginPage = () => {
     const { login, loginWithGoogle } = useAuth();
     const navigate = useNavigate();
 
-    const handleLoginSuccess = (user) => {
-        if (user.role === 'admin') {
-            navigate('/admin-dashboard');
-        } else {
-            navigate('/user-dashboard');
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
+        
+        // Support old admin credentials for developer convenience
+        if (email === 'vikky' && password === '1234') {
+            setError('Please use a real Firebase Email for this system. If you are an admin, add your email to the "admins" collection in Firestore.');
+            setLoading(false);
+            return;
+        }
+
         try {
             await login(email, password);
-            // Redirection will be handled by the effect in Dashboard or we can check role here if we wait for auth state
-            // But usually onAuthStateChanged in AuthContext will trigger a re-render
-            // For now, let's just navigate to dashboard and let it handle the role-based routing
             navigate('/dashboard'); 
         } catch (err) {
             setError('Failed to log in: ' + err.message);
@@ -53,144 +50,128 @@ const LoginPage = () => {
                     justify-content: center;
                     align-items: center;
                     min-height: 100vh;
-                    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+                    background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
                     padding: 2rem;
+                    font-family: 'Inter', sans-serif;
                 }
                 .auth-card {
-                    background: rgba(22, 27, 34, 0.8);
-                    backdrop-filter: blur(12px);
-                    -webkit-backdrop-filter: blur(12px);
+                    background: rgba(30, 41, 59, 0.7);
+                    backdrop-filter: blur(16px);
                     padding: 3rem;
-                    border-radius: 24px;
-                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                    border-radius: 28px;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                     width: 100%;
                     max-width: 420px;
                     border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: white;
                 }
                 .auth-card h2 {
-                    margin-bottom: 2rem;
+                    margin-bottom: 1.5rem;
                     text-align: center;
-                    font-size: 2rem;
+                    font-size: 2.25rem;
                     font-weight: 800;
-                    color: var(--text-primary);
-                    letter-spacing: -0.02em;
+                    letter-spacing: -0.025em;
                 }
                 .error-msg {
-                    background: rgba(248, 81, 73, 0.1);
-                    color: var(--danger);
-                    padding: 0.75rem;
-                    border-radius: 8px;
+                    background: rgba(239, 68, 68, 0.1);
+                    color: #f87171;
+                    padding: 0.85rem;
+                    border-radius: 12px;
                     margin-bottom: 1.5rem;
                     font-size: 0.85rem;
-                    border: 1px solid var(--danger);
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                    line-height: 1.4;
                 }
-                .auth-card .form-group {
-                    margin-bottom: 1.5rem;
-                }
-                .auth-card .form-group label {
+                .form-group { margin-bottom: 1.25rem; }
+                .form-group label {
                     display: block;
                     margin-bottom: 0.5rem;
                     font-weight: 600;
                     font-size: 0.8rem;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                    color: var(--text-secondary);
+                    color: #94a3b8;
                 }
                 .auth-card input {
                     width: 100%;
-                    padding: 0.8rem 1rem;
-                    border-radius: 12px;
-                    border: 1px solid var(--border);
-                    background: var(--bg-primary);
-                    color: var(--text-primary);
+                    padding: 0.9rem 1.1rem;
+                    border-radius: 14px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(15, 23, 42, 0.6);
+                    color: white;
                     font-size: 1rem;
-                    transition: var(--transition);
+                    transition: all 0.2s;
                 }
                 .auth-card input:focus {
                     outline: none;
-                    border-color: var(--primary);
-                    box-shadow: 0 0 0 2px var(--primary-soft);
+                    border-color: #38bdf8;
+                    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
                 }
                 .auth-btn {
-                    background: var(--primary);
+                    background: linear-gradient(135deg, #6366f1, #06b6d4);
                     color: white;
                     border: none;
                     padding: 1rem;
-                    border-radius: 12px;
+                    border-radius: 14px;
                     width: 100%;
                     font-weight: 700;
                     cursor: pointer;
                     margin-top: 1rem;
-                    transition: var(--transition);
+                    transition: all 0.2s;
+                    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
                 }
                 .auth-btn:hover:not(:disabled) {
+                    transform: translateY(-2px);
                     filter: brightness(1.1);
-                    transform: translateY(-1px);
-                }
-                .auth-btn:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
                 }
                 .google-btn {
                     background: white;
-                    color: #333;
-                    border: 1px solid #ddd;
-                    padding: 0.8rem;
-                    border-radius: 12px;
+                    color: #1e293b;
+                    border: none;
+                    padding: 0.9rem;
+                    border-radius: 14px;
                     width: 100%;
-                    font-weight: 600;
+                    font-weight: 700;
                     cursor: pointer;
                     margin-top: 1rem;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     gap: 10px;
-                    transition: var(--transition);
-                }
-                .google-btn:hover {
-                    background: #f8f9fa;
-                    border-color: #ccc;
                 }
                 .divider {
                     display: flex;
                     align-items: center;
-                    text-align: center;
                     margin: 1.5rem 0;
-                    color: var(--text-muted);
-                    font-size: 0.8rem;
+                    color: #64748b;
+                    font-size: 0.75rem;
+                    font-weight: 700;
                 }
                 .divider::before, .divider::after {
                     content: '';
                     flex: 1;
-                    border-bottom: 1px solid var(--border);
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.1);
                 }
-                .divider:not(:empty)::before { margin-right: 1rem; }
-                .divider:not(:empty)::after { margin-left: 1rem; }
+                .divider:before { margin-right: 1rem; }
+                .divider:after { margin-left: 1rem; }
                 
                 .auth-link {
                     text-align: center;
                     margin-top: 2rem;
-                    color: var(--text-secondary);
+                    color: #94a3b8;
                     font-size: 0.9rem;
                 }
-                .auth-link a {
-                    color: var(--primary);
-                    text-decoration: none;
-                    font-weight: 600;
-                }
-                .auth-link a:hover {
-                    text-decoration: underline;
-                }
+                .auth-link a { color: #38bdf8; text-decoration: none; font-weight: 700; }
             `}</style>
             <div className="auth-card">
-                <h2>Login</h2>
+                <h2>Welcome</h2>
                 {error && <div className="error-msg">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Email Address</label>
                         <input 
-                            type="email" 
-                            placeholder="Enter your email" 
+                            type="text" 
+                            placeholder="name@university.edu" 
                             required 
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -200,26 +181,26 @@ const LoginPage = () => {
                         <label>Password</label>
                         <input 
                             type="password" 
-                            placeholder="Enter your password" 
+                            placeholder="••••••••" 
                             required 
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
                     <button type="submit" className="auth-btn" disabled={loading}>
-                        {loading ? 'Logging in...' : 'Login'}
+                        {loading ? 'Processing...' : 'Sign In'}
                     </button>
                 </form>
                 
-                <div className="divider">OR</div>
+                <div className="divider">SECURE ACCESS</div>
                 
                 <button onClick={handleGoogleLogin} className="google-btn">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" />
-                    Sign in with Google
+                    Continue with Google
                 </button>
                 
                 <div className="auth-link">
-                    Don't have an account? <Link to="/register">Register here</Link>
+                    New student? <Link to="/register">Create Account</Link>
                 </div>
             </div>
         </div>
