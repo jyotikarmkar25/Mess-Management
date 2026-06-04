@@ -1,17 +1,18 @@
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
-  background: radial-gradient(circle at top, #0f172a, #020617);
-  color: white;
+  background: radial-gradient(circle at top, #99a6c3, #bcbcbd, black);
   overflow-x: hidden;
+  background-repeat: no-repeat;
+  height: auto;
 }
 
 .login {
   width: 360px;
   margin: 120px auto;
-  padding: 35px;
+  padding: 80px;
   border-radius: 20px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(207, 199, 199, 0.899);
   backdrop-filter: blur(15px);
   box-shadow: 0 0 30px rgba(0,0,0,0.5);
   text-align: center;
@@ -21,16 +22,18 @@ body {
 .login h2 {
   margin-bottom: 20px;
   letter-spacing: 1px;
+  text-align: center;
 }
+
 
 input, select {
   width: 92%;
   padding: 13px;
   margin: 8px 0;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.06);
-  color: white;
+  border: 1px solid rgba(117, 114, 114, 0.882);
+  background: rgba(221, 214, 214, 0.842);
+  color: rgb(99, 91, 91);
   outline: none;
   transition: 0.3s;
 }
@@ -50,7 +53,7 @@ button {
   cursor: pointer;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, #6366f1, #06b6d4);
+  background: linear-gradient(135deg, #6366f1, #0e0adf);
   transition: 0.3s;
   box-shadow: 0 5px 20px rgba(99,102,241,0.3);
 }
@@ -65,7 +68,8 @@ header {
   padding: 18px;
   font-size: 22px;
   font-weight: 700;
-  background: rgba(255,255,255,0.05);
+  background: rgba(11, 0, 0, 0.745);
+  color: white;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
@@ -76,9 +80,9 @@ header {
 
 .sidebar {
   width: 240px;
-  min-height: 100vh;
+  min-height: 76vh;
   padding: 15px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(15, 1, 1, 0.818);
   backdrop-filter: blur(15px);
   border-right: 1px solid rgba(255,255,255,0.08);
 }
