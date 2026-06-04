@@ -13,15 +13,12 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
         
-        // Support old admin credentials for developer convenience
-        if (email === 'vikky' && password === '1234') {
-            setError('Please use a real Firebase Email for this system. If you are an admin, add your email to the "admins" collection in Firestore.');
-            setLoading(false);
-            return;
+        if (!email || !password) {
+            return setError('Please enter both email and password');
         }
 
+        setLoading(true);
         try {
             await login(email, password);
             navigate('/dashboard'); 
@@ -57,7 +54,7 @@ const LoginPage = () => {
                 .auth-card {
                     background: rgba(30, 41, 59, 0.7);
                     backdrop-filter: blur(16px);
-                    padding: 3rem;
+                    padding: 3.5rem;
                     border-radius: 28px;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                     width: 100%;
@@ -66,7 +63,7 @@ const LoginPage = () => {
                     color: white;
                 }
                 .auth-card h2 {
-                    margin-bottom: 1.5rem;
+                    margin-bottom: 2rem;
                     text-align: center;
                     font-size: 2.25rem;
                     font-weight: 800;
@@ -164,13 +161,13 @@ const LoginPage = () => {
                 .auth-link a { color: #38bdf8; text-decoration: none; font-weight: 700; }
             `}</style>
             <div className="auth-card">
-                <h2>Welcome</h2>
+                <h2>Login</h2>
                 {error && <div className="error-msg">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Email Address</label>
                         <input 
-                            type="text" 
+                            type="email" 
                             placeholder="name@university.edu" 
                             required 
                             value={email}
@@ -188,19 +185,19 @@ const LoginPage = () => {
                         />
                     </div>
                     <button type="submit" className="auth-btn" disabled={loading}>
-                        {loading ? 'Processing...' : 'Sign In'}
+                        {loading ? 'Logging in...' : 'Sign In'}
                     </button>
                 </form>
                 
-                <div className="divider">SECURE ACCESS</div>
+                <div className="divider">OR</div>
                 
                 <button onClick={handleGoogleLogin} className="google-btn">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" />
-                    Continue with Google
+                    Sign in with Google
                 </button>
                 
                 <div className="auth-link">
-                    New student? <Link to="/register">Create Account</Link>
+                    Don't have an account? <Link to="/register">Register here</Link>
                 </div>
             </div>
         </div>
