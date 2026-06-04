@@ -4,9 +4,14 @@ const router = express.Router();
 const {
   registerUser,
   loginUser,
+  getProfile,
+  changePassword
 } = require("../controllers/authController");
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+
+router.get('/profile', getProfile);
+router.put('/change-password', changePassword);
 
 module.exports = router;
