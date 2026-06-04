@@ -8,19 +8,23 @@ const {
   deleteFeedback,
 } = require("../controllers/feedbackController");
 
-const { protect, admin } = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
 
-// Student: Submit Feedback
-router.post("/", protect, submitFeedback);
+// 🟢 Student: Submit Feedback
+router.post("/submit", protect, submitFeedback);
 
-// Admin: Get All Feedbacks
-router.get("/", protect, admin, getAllFeedbacks);
 
-// Admin: Get Feedback By ID
-router.get("/:id", protect, admin, getFeedbackById);
+// 🔐 Admin: Get All Feedbacks
+router.get("/all", protect, getAllFeedbacks);
 
-// Admin: Delete Feedback
-router.delete("/:id", protect, admin, deleteFeedback);
+
+// 🔐 Admin: Get Feedback By ID
+router.get("/:id", protect, getFeedbackById);
+
+
+// 🔐 Admin: Delete Feedback
+router.delete("/:id", protect, deleteFeedback);
+
 
 module.exports = router;

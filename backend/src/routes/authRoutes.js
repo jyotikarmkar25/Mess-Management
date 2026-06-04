@@ -6,16 +6,19 @@ const {
   loginUser,
   getProfile,
   changePassword,
-} = require("../controllers/userController");
+} = require("../controllers/authController");
 
-const { protect } = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
-// Public Routes
+
+// 🟢 Public Routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// Protected Routes
+
+// 🔐 Protected Routes (login required)
 router.get("/profile", protect, getProfile);
 router.put("/change-password", protect, changePassword);
+
 
 module.exports = router;
