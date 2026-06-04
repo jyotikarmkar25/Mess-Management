@@ -6,8 +6,7 @@ import {
     signOut,
     GoogleAuthProvider,
     signInWithPopup,
-    updatePassword,
-    updateProfile
+    updatePassword
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -20,7 +19,6 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            setLoading(true);
             if (firebaseUser) {
                 try {
                     // Check if user is admin
@@ -45,8 +43,13 @@ export const AuthProvider = ({ children }) => {
                                 ...userDoc.data() 
                             });
                         } else {
-                            // Default if doc doesn't exist yet
-                            setUser({ uid: firebaseUser.uid, email: firebaseUser.email, role: 'user' });
+                            // Default to user role if doc doesn't exist yet
+                            setUser({ 
+                                uid: firebaseUser.uid, 
+                                email: firebaseUser.email, 
+                                displayName: firebaseUser.displayName,
+                                role: 'user' 
+                            });
                         }
                     }
                 } catch (error) {
@@ -72,16 +75,21 @@ export const AuthProvider = ({ children }) => {
             const result = await signInWithPopup(auth, provider);
             const firebaseUser = result.user;
             
+            // Check if user doc exists, if not create it
             const adminDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
             
             if (!adminDoc.exists() && !userDoc.exists()) {
-                await setDoc(doc(db, 'users', firebaseUser.uid), {
+                const userData = {
                     uid: firebaseUser.uid,
                     name: firebaseUser.displayName,
                     email: firebaseUser.email,
-                    role: 'user'
-                });
+                    role: 'user',
+                    createdAt: new Date().toISOString()
+                };
+                await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+                // Manually update local state to ensure immediate availability
+                setUser(prev => ({ ...prev, ...userData }));
             }
             return result;
         } catch (error) {
@@ -94,13 +102,14 @@ export const AuthProvider = ({ children }) => {
         const result = await createUserWithEmailAndPassword(auth, email, password);
         const firebaseUser = result.user;
         
-        await setDoc(doc(db, 'users', firebaseUser.uid), {
+        const userData = {
             uid: firebaseUser.uid,
             name: name,
             email: email,
-            role: 'user'
-        });
-        
+            role: 'user',
+            createdAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, 'users', firebaseUser.uid), userData);
         return result;
     };
 
@@ -122,7 +131,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, changePassword, updateAdminProfile }}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };
