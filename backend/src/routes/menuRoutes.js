@@ -1,25 +1,51 @@
-const express = require('express');
-const route = express.Router();
+const express = require("express");
+const router = express.Router();
 
-// function import
 const {
-    createMenu,
-    getTodayMenu,
-    getAllMenus,
-    updateMenu,
-    deleteMenu
-} = require('../controllers/menuController');
+  createMenu,
+  getTodayMenu,
+  getAllMenus,
+  updateMenu,
+  deleteMenu,
+} = require("../controllers/menuController");
 
-const upload = reqire('..middleware/upload')
+const { protect, admin } = require("../middleware/authMiddleware");
 
-// routes define
-router.post('/create', upload.single('image'), createMenu)
-router.get('/today', getTodayMenu);
-router.post('/', createMenu);
-router.get('/', getAllMenus);
-router.put('/:id', updateMenu); 
-router.delete('/:id', deleteMenu); 
+// Multer Upload Middleware
+const upload = require("../middleware/upload");
 
-// router export 
+// Student Routes
+router.get("/today", protect, getTodayMenu);
 
-module.exports = route;
+// Admin Routes
+router.post(
+  "/",
+  protect,
+  admin,
+  upload.single("image"),
+  createMenu
+);
+
+router.get(
+  "/",
+  protect,
+  admin,
+  getAllMenus
+);
+
+router.put(
+  "/:id",
+  protect,
+  admin,
+  upload.single("image"),
+  updateMenu
+);
+
+router.delete(
+  "/:id",
+  protect,
+  admin,
+  deleteMenu
+);
+
+module.exports = router;

@@ -1,20 +1,26 @@
 const express = require("express");
 const router = express.Router();
 
-// function import
-
 const {
-submitFeedback,
-getAllFeedbacks,
-getFeedbackById,
-deleteFeedback
-} = require('../controllers/feedbackController');
+  submitFeedback,
+  getAllFeedbacks,
+  getFeedbackById,
+  deleteFeedback,
+} = require("../controllers/feedbackController");
 
-// routers define
-router.post('/', submitFeedback);
-router.get('/', getAllFeedbacks);
-router.get('/:id', getFeedbackById);
-router.delete('/:id',deleteFeedback); 
+const { protect, admin } = require("../middleware/authMiddleware");
 
-// router ko export ka reye hai 
-module.export = router
+
+// Student: Submit Feedback
+router.post("/", protect, submitFeedback);
+
+// Admin: Get All Feedbacks
+router.get("/", protect, admin, getAllFeedbacks);
+
+// Admin: Get Feedback By ID
+router.get("/:id", protect, admin, getFeedbackById);
+
+// Admin: Delete Feedback
+router.delete("/:id", protect, admin, deleteFeedback);
+
+module.exports = router;

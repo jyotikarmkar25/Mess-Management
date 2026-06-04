@@ -5,13 +5,17 @@ const {
   registerUser,
   loginUser,
   getProfile,
-  changePassword
-} = require("../controllers/authController");
+  changePassword,
+} = require("../controllers/userController");
 
+const { protect } = require("../middleware/authMiddleware");
+
+// Public Routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-router.get('/profile', getProfile);
-router.put('/change-password', changePassword);
+// Protected Routes
+router.get("/profile", protect, getProfile);
+router.put("/change-password", protect, changePassword);
 
 module.exports = router;
