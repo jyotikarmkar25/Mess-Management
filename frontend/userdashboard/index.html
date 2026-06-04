@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Mess Dashboard</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Auth Section -->
+    <section id="auth-section" class="auth-container">
+        <div class="auth-box">
+            <h2><i class="fas fa-utensils"></i> Mess Portal Login</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <input type="text" id="student-id" placeholder="Student ID" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn-primary">Login</button>
+                <p>New student? <a href="#" id="show-register">Register here</a></p>
+            </form>
+        </div>
+    </section>
+
+    <!-- Main Dashboard (Hidden by default, shown after login) -->
+    <main id="main-dashboard" style="display: none;">
+        <nav class="navbar">
+            <div class="logo">MessControl</div>
+            <div class="nav-links">
+                <a href="#daily-menu"><i class="fas fa-calendar-day"></i> Daily</a>
+                <a href="#weekly-schedule"><i class="fas fa-calendar-week"></i> Weekly</a>
+                <a href="#booking"><i class="fas fa-bookmark"></i> Booking</a>
+                <a href="#attendance"><i class="fas fa-check-circle"></i> Attendance</a>
+                <a href="#feedback"><i class="fas fa-comment-alt"></i> Feedback</a>
+            </div>
+            <div class="user-profile">
+                <span id="display-student-id">STUDENT001</span>
+                <i class="fas fa-bell notification-icon" id="notif-toggle">
+                    <span class="badge">2</span>
+                </i>
+            </div>
+        </nav>
+
+        <div class="content">
+            <!-- Notifications Overlay -->
+            <div id="notifications-panel" class="notifications-panel">
+                <h3>Notifications</h3>
+                <ul>
+                    <li class="notif-item special">🌟 Special Dinner tonight: Paneer Tikka!</li>
+                    <li class="notif-item alert">⚠️ Lunch menu updated for tomorrow.</li>
+                </ul>
+            </div>
+
+            <!-- Daily Menu Section -->
+            <section id="daily-menu" class="card-section">
+                <h2>Today's Menu</h2>
+                <div class="menu-grid">
+                    <div class="menu-card animate-up">
+                        <i class="fas fa-coffee"></i>
+                        <h3>Breakfast</h3>
+                        <p>Aloo Paratha, Curd, Tea</p>
+                    </div>
+                    <div class="menu-card animate-up" style="animation-delay: 0.1s;">
+                        <i class="fas fa-sun"></i>
+                        <h3>Lunch</h3>
+                        <p>Rice, Dal, Mixed Veg, Salad</p>
+                    </div>
+                    <div class="menu-card animate-up" style="animation-delay: 0.2s;">
+                        <i class="fas fa-cookie-bite"></i>
+                        <h3>Snacks</h3>
+                        <p>Samosa, Chai</p>
+                    </div>
+                    <div class="menu-card animate-up" style="animation-delay: 0.3s;">
+                        <i class="fas fa-moon"></i>
+                        <h3>Dinner</h3>
+                        <p>Roti, Matar Paneer, Kheer</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Booking & QR Section -->
+            <div class="two-column">
+                <section id="booking" class="card-section">
+                    <h2>Meal Management</h2>
+                    <div class="booking-controls">
+                        <div class="control-item">
+                            <span>Lunch (Tomorrow)</span>
+                            <button class="btn-book">Book</button>
+                            <button class="btn-cancel">Cancel</button>
+                        </div>
+                        <div class="control-item">
+                            <span>Dinner (Tomorrow)</span>
+                            <button class="btn-book">Book</button>
+                            <button class="btn-cancel">Cancel</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="qr-section" class="card-section">
+                    <h2>QR Check-in</h2>
+                    <div class="qr-placeholder">
+                        <i class="fas fa-qrcode"></i>
+                        <p>Scan to collect your meal</p>
+                        <button class="btn-secondary">Generate QR</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Weekly Schedule -->
+            <section id="weekly-schedule" class="card-section">
+                <h2>Weekly Schedule</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Breakfast</th>
+                                <th>Lunch</th>
+                                <th>Dinner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Monday</td><td>Poha</td><td>Rajma Chawal</td><td>Mix Veg</td></tr>
+                            <tr><td>Tuesday</td><td>Idli</td><td>Kadi Pakora</td><td>Egg Curry</td></tr>
+                            <!-- More rows... -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Attendance & Rating -->
+            <div class="two-column">
+                <section id="attendance" class="card-section">
+                    <h2>Attendance Tracking</h2>
+                    <div class="stat-box">
+                        <div class="stat">
+                            <span class="label">Meals Taken (This Month)</span>
+                            <span class="value">42/60</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 70%;"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="rating" class="card-section">
+                    <h2>Rate Today's Food</h2>
+                    <div class="star-rating">
+                        <i class="fas fa-star" data-rating="1"></i>
+                        <i class="fas fa-star" data-rating="2"></i>
+                        <i class="fas fa-star" data-rating="3"></i>
+                        <i class="fas fa-star" data-rating="4"></i>
+                        <i class="fas fa-star" data-rating="5"></i>
+                    </div>
+                    <textarea placeholder="Any comments?"></textarea>
+                    <button class="btn-primary">Submit Rating</button>
+                </section>
+            </div>
+
+            <!-- Feedback & Complaints -->
+            <section id="feedback" class="card-section">
+                <h2>Feedback & Complaints</h2>
+                <form class="feedback-form">
+                    <select required>
+                        <option value="">Select Category</option>
+                        <option value="quality">Food Quality</option>
+                        <option value="hygiene">Hygiene</option>
+                        <option value="staff">Staff Behavior</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <textarea placeholder="Describe your issue or suggestion..." required></textarea>
+                    <button type="submit" class="btn-primary">Submit Complaint</button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Basic toggle for demonstration
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-dashboard').style.display = 'block';
+        });
+
+        document.getElementById('notif-toggle').addEventListener('click', () => {
+            document.getElementById('notifications-panel').classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
