@@ -9,8 +9,18 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const DashboardRedirect = () => {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+                Verifying session...
+            </div>
+        );
+    }
+    
     if (!user) return <Navigate to="/login" replace />;
+    
     return <Navigate to={user.role === 'admin' ? '/admin-dashboard' : '/user-dashboard'} replace />;
 };
 
