@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="loginBox" class="login">
+        <h2>Admin Login</h2>
+
+        <input id="user" placeholder="Username">
+        <input id="pass" type="password" placeholder="Password">
+
+        <button onclick="login()">Login</button>
+        <p id="msg"></p>
+    </div>
+
+    <div id="dashboard" style="display:none;">
+
+        <header>
+            <h1>Smart Campus Admin Dashboard</h1>
+        </header>
+
+        <div class="layout">
+
+            <div class="sidebar">
+                <button onclick="show('summary')">Summary</button>
+                <button onclick="show('menu')">Menu</button>
+                <button onclick="show('image')">Image AI</button>
+                <button onclick="show('time')">Timing</button>
+                <button onclick="show('feedback')">Feedback</button>
+                <button onclick="show('analytics')">Analytics</button>
+                <button onclick="show('password')">Password</button>
+            </div>
+
+            <div class="main">
+
+                <section id="summary" class="card">
+                    <h2>Dashboard Summary</h2>
+
+                    <div class="stats">
+                        <div>Students: 150</div>
+                        <div>Attendance: 88%</div>
+                        <div>Rating: 4.6</div>
+                        <div>Foods: <span id="foodCount">0</span></div>
+                    </div>
+                </section>
+
+                <section id="menu" class="card hidden">
+                    <button onclick="goBack()">Back</button>
+
+                    <h2>Weekly Menu System</h2>
+
+                    <select id="day" class = "rocky">
+                        <option>Monday</option>
+                        <option>Tuesday</option>
+                        <option>Wednesday</option>
+                        <option>Thursday</option>
+                        <option>Friday</option>
+                        <option>Saturday</option>
+                        <option>Sunday</option>
+                    </select>
+
+                    <input id="b" placeholder="Breakfast">
+                    <input id="l" placeholder="Lunch">
+                    <input id="d" placeholder="Dinner">
+
+                    <button onclick="saveMenu()">Save Menu</button>
+
+                    <div id="menuBox"></div>
+
+                    <hr>
+
+                    <input id="foodInput" placeholder="Add Food">
+                    <button onclick="addFood()">Add Food</button>
+
+                    <ul id="foodList"></ul>
+                </section>
+
+                <section id="image" class="card hidden">
+                    <button onclick="goBack()">Back</button>
+
+                    <h2> Food Image AI Analyzer</h2>
+
+                    <input type="file" id="img" accept="image/*">
+
+                    <button onclick="analyzeFood()"> Analyze Food</button>
+                    <button onclick="removeImage()"> Remove Image</button>
+
+                    <img id="preview" class="preview">
+
+                    <div id="result" class="result">
+                        Upload image and click analyze
+                    </div>
+                </section>
+
+
+                <section id="time" class="card hidden">
+                    <button onclick="goBack()">Back</button>
+
+
+                    <h2>Meal Timing</h2>
+
+                    <input type="time" id="bt">
+                    <input type="time" id="lt">
+                    <input type="time" id="dt">
+
+                    <button onclick="saveTime()">Save</button>
+
+                    <div id="timeBox"></div>
+                </section>
+
+                <section id="feedback" class="card hidden">
+                    <button onclick="goBack()">Back</button>
+
+                    <h2>Feedback System</h2>
+
+                    <div id="feedbackList"></div>
+                </section>
+
+                <section id="analytics" class="card hidden">
+                    <button onclick="goBack()">Back</button>
+
+                    <h2>Analytics</h2>
+
+                </section>
+
+                <section id="password" class="card hidden">
+                <button onclick="goBack()">Back</button>
+
+                    <h2>Change Password</h2>
+
+                    <input id="oldP" type="password" placeholder="Old Password">
+                    <input id="newP" type="password" placeholder="New Password">
+
+                    <button onclick="changePass()">Update Password</button>
+
+                    <p id="passMsg"></p>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
