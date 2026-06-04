@@ -6,20 +6,25 @@ const {
   getUserById,
   updateUser,
   deleteUser,
-} = require("../controllers/adminUserController");
+} = require("../controllers/userController");
 
-const { protect, admin } = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
-// Get All Users
-router.get("/", protect, admin, getAllUsers);
 
-// Get User By ID
-router.get("/:id", protect, admin, getUserById);
+// 🟢 Admin: Get All Users
+router.get("/all", protect, getAllUsers);
 
-// Update User
-router.put("/:id", protect, admin, updateUser);
 
-// Delete User
-router.delete("/:id", protect, admin, deleteUser);
+// 🟢 Admin: Get Single User
+router.get("/:id", protect, getUserById);
+
+
+// 🟢 Admin: Update User
+router.put("/update/:id", protect, updateUser);
+
+
+// 🟢 Admin: Delete User
+router.delete("/delete/:id", protect, deleteUser);
+
 
 module.exports = router;

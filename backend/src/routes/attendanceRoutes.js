@@ -7,17 +7,19 @@ const {
   getStudentAttendance,
 } = require("../controllers/attendanceController");
 
-// Middleware (JWT Auth)
-const { protect, admin } = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
 
-// Student Attendance Mark
+// 1. Student: Mark Attendance
 router.post("/mark", protect, markAttendance);
 
-// Student Apni Attendance Dekhe
-router.get("/my-attendance", protect, getStudentAttendance);
 
-// Admin Sabhi Students Ki Attendance Dekhe
-router.get("/", protect, admin, getAttendance);
+// 2. Admin: Get All Attendance
+router.get("/all", protect, getAttendance);
+
+
+// 3. Student: Get Own Attendance
+router.get("/my", protect, getStudentAttendance);
+
 
 module.exports = router;

@@ -9,43 +9,28 @@ const {
   deleteMenu,
 } = require("../controllers/menuController");
 
-const { protect, admin } = require("../middleware/authMiddleware");
-
-// Multer Upload Middleware
+const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
-// Student Routes
+
+// 🟢 Admin: Create Menu (with image upload)
+router.post("/create", protect, upload.single("image"), createMenu);
+
+
+// 🟢 Student: Get Today Menu
 router.get("/today", protect, getTodayMenu);
 
-// Admin Routes
-router.post(
-  "/",
-  protect,
-  admin,
-  upload.single("image"),
-  createMenu
-);
 
-router.get(
-  "/",
-  protect,
-  admin,
-  getAllMenus
-);
+// 🟢 Admin: Get All Menus
+router.get("/all", protect, getAllMenus);
 
-router.put(
-  "/:id",
-  protect,
-  admin,
-  upload.single("image"),
-  updateMenu
-);
 
-router.delete(
-  "/:id",
-  protect,
-  admin,
-  deleteMenu
-);
+// 🟢 Admin: Update Menu (with optional image upload)
+router.put("/update/:id", protect, upload.single("image"), updateMenu);
+
+
+// 🟢 Admin: Delete Menu
+router.delete("/delete/:id", protect, deleteMenu);
+
 
 module.exports = router;

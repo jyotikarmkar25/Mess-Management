@@ -13,7 +13,7 @@ const authRoutes = require("./routes/authRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const menuRoutes = require("./routes/menuRoutes");
-const adminUserRoutes = require("./routes/adminUserRoutes");
+const adminUserRoutes = require("./routes/userRoutes");
 
 // Route Middleware
 app.use("/api/auth", authRoutes);
