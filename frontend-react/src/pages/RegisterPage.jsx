@@ -4,15 +4,31 @@ import { useNavigate, Link } from 'react-router-dom';
 
 const RegisterPage = () => {
     const [fullname, setFullname] = useState('');
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login } = useAuth();
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { register } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        login(username);
-        navigate('/dashboard');
+        setError('');
+        
+        if (password !== confirmPassword) {
+            return setError('Passwords do not match');
+        }
+
+        setLoading(true);
+        try {
+            await register(email, password, fullname);
+            navigate('/dashboard');
+        } catch (err) {
+            setError('Failed to create account: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -22,91 +38,94 @@ const RegisterPage = () => {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    height: 100vh;
-                    background-color: var(--bg-main);
+                    min-height: 100vh;
+                    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+                    padding: 2rem;
                 }
                 .auth-card {
-                    background: var(--bg-card);
-                    padding: 3.5rem;
-                    border-radius: var(--radius-lg);
-                    box-shadow: var(--shadow-lg);
+                    background: rgba(22, 27, 34, 0.8);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    padding: 3rem;
+                    border-radius: 24px;
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
                     width: 100%;
-                    max-width: 420px;
-                    border: 1px solid var(--border);
+                    max-width: 450px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                 }
                 .auth-card h2 {
-                    margin-bottom: 2.5rem;
+                    margin-bottom: 2rem;
                     text-align: center;
-                    font-size: 2.25rem;
-                    font-weight: 900;
-                    color: var(--text-main);
+                    font-size: 2rem;
+                    font-weight: 800;
+                    color: var(--text-primary);
+                }
+                .error-msg {
+                    background: rgba(248, 81, 73, 0.1);
+                    color: var(--danger);
+                    padding: 0.75rem;
+                    border-radius: 8px;
+                    margin-bottom: 1.5rem;
+                    font-size: 0.85rem;
+                    border: 1px solid var(--danger);
                 }
                 .auth-card .form-group {
-                    margin-bottom: 1.5rem;
+                    margin-bottom: 1.25rem;
                 }
                 .auth-card .form-group label {
                     display: block;
-                    margin-bottom: 0.6rem;
-                    font-weight: 800;
+                    margin-bottom: 0.5rem;
+                    font-weight: 600;
                     font-size: 0.8rem;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                    color: var(--text-muted);
+                    color: var(--text-secondary);
                 }
                 .auth-card input {
                     width: 100%;
-                    padding: 1rem;
+                    padding: 0.8rem 1rem;
                     border-radius: 12px;
-                    border: 2px solid var(--border);
-                    background: var(--bg-main);
-                    color: var(--text-main);
+                    border: 1px solid var(--border);
+                    background: var(--bg-primary);
+                    color: var(--text-primary);
                     font-size: 1rem;
-                    font-weight: 500;
-                    transition: var(--transition);
                 }
                 .auth-card input:focus {
                     outline: none;
                     border-color: var(--primary);
-                    box-shadow: 0 0 0 5px var(--primary-glow);
+                    box-shadow: 0 0 0 2px var(--primary-soft);
                 }
                 .auth-btn {
                     background: var(--primary);
                     color: white;
                     border: none;
-                    padding: 1.125rem;
-                    border-radius: 14px;
+                    padding: 1rem;
+                    border-radius: 12px;
                     width: 100%;
-                    font-weight: 900;
+                    font-weight: 700;
                     cursor: pointer;
                     margin-top: 1rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                    transition: var(--transition);
                 }
-                .auth-btn:hover {
-                    background: var(--primary-hover);
-                    transform: translateY(-2px);
-                    box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+                .auth-btn:hover:not(:disabled) {
+                    filter: brightness(1.1);
+                }
+                .auth-btn:disabled {
+                    opacity: 0.6;
                 }
                 .auth-link {
                     text-align: center;
                     margin-top: 2rem;
-                    color: var(--text-muted);
-                    font-weight: 700;
+                    color: var(--text-secondary);
                     font-size: 0.9rem;
                 }
                 .auth-link a {
                     color: var(--primary);
                     text-decoration: none;
-                    border-bottom: 2px solid transparent;
-                    transition: var(--transition);
-                }
-                .auth-link a:hover {
-                    border-color: var(--primary);
+                    font-weight: 600;
                 }
             `}</style>
             <div className="auth-card">
                 <h2>Register</h2>
+                {error && <div className="error-msg">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Full Name</label>
@@ -119,13 +138,13 @@ const RegisterPage = () => {
                         />
                     </div>
                     <div className="form-group">
-                        <label>Username</label>
+                        <label>Email Address</label>
                         <input 
-                            type="text" 
-                            placeholder="Choose a username" 
+                            type="email" 
+                            placeholder="Enter your email" 
                             required 
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
                     <div className="form-group">
@@ -138,7 +157,19 @@ const RegisterPage = () => {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <button type="submit" className="auth-btn">Register</button>
+                    <div className="form-group">
+                        <label>Confirm Password</label>
+                        <input 
+                            type="password" 
+                            placeholder="Confirm your password" 
+                            required 
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+                    </div>
+                    <button type="submit" className="auth-btn" disabled={loading}>
+                        {loading ? 'Creating Account...' : 'Register'}
+                    </button>
                 </form>
                 <div className="auth-link">
                     Already have an account? <Link to="/login">Login here</Link>

@@ -4,12 +4,23 @@ import { useAuth } from '../context/AuthContext';
 const ProfileSettings = () => {
     const { user } = useAuth();
     const [profilePhoto, setProfilePhoto] = useState(localStorage.getItem('profilePhoto') || 'https://via.placeholder.com/150');
-    const [profileData, setProfileData] = useState(JSON.parse(localStorage.getItem('profileData') || JSON.stringify({
-        fullname: user?.username || 'User',
-        email: 'user@langsmith.ai',
-        phone: '+1 (555) 000-0000',
-        block: 'Main-Rail, Trace-01'
-    })));
+    const [profileData, setProfileData] = useState({
+        fullname: user?.name || user?.displayName || 'User',
+        email: user?.email || '',
+        phone: user?.phone || '+1 (555) 000-0000',
+        block: user?.block || 'Main-Rail, Trace-01'
+    });
+
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                fullname: user.name || user.displayName || 'User',
+                email: user.email || '',
+                phone: user.phone || '+1 (555) 000-0000',
+                block: user.block || 'Main-Rail, Trace-01'
+            });
+        }
+    }, [user]);
 
     const handlePhotoUpload = (e) => {
         const file = e.target.files[0];
@@ -27,8 +38,8 @@ const ProfileSettings = () => {
 
     const handleFormSubmit = (e) => {
         e.preventDefault();
-        localStorage.setItem('profileData', JSON.stringify(profileData));
-        alert('Configuration saved.');
+        // In a real app, we would update Firestore here
+        alert('Configuration saved (Local update only in this demo).');
     };
 
     const handleChange = (e) => {
@@ -55,7 +66,7 @@ const ProfileSettings = () => {
                         </div>
                         <div className="profile-main-info">
                             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{profileData.fullname}</h3>
-                            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>ID: user_2n9v7k2l9s0p</p>
+                            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>ID: {user?.uid || 'user_unknown'}</p>
                         </div>
                     </div>
                     
@@ -70,7 +81,7 @@ const ProfileSettings = () => {
                                     </div>
                                     <div className="form-group">
                                         <label>Email Address</label>
-                                        <input type="email" id="profile-email" value={profileData.email} onChange={handleChange} />
+                                        <input type="email" id="profile-email" value={profileData.email} onChange={handleChange} disabled />
                                     </div>
                                 </div>
                             </div>
