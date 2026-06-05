@@ -1,52 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { db, auth } from '../firebase';
-import { collection, addDoc, query, where, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
 
 const AttendanceTracker = () => {
+    const { user } = useAuth();
     const meals = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
     const [attendance, setAttendance] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!auth.currentUser) return;
+        if (!user) return;
 
-        const today = new Date();
-        today.setHours(0,0,0,0);
+        // Mock fetching attendance from localStorage
+        const storedAttendance = localStorage.getItem(`attendance_${user.uid}`);
+        if (storedAttendance) {
+            setAttendance(JSON.parse(storedAttendance));
+        }
+        setLoading(false);
+    }, [user]);
 
-        const q = query(
-            collection(db, 'attendance'),
-            where('uid', '==', auth.currentUser.uid),
-            where('timestamp', '>=', today)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(doc => doc.data().meal);
-            setAttendance(data);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    const toggleStatus = async (meal) => {
-        if (!auth.currentUser) return;
+    const toggleStatus = (meal) => {
+        if (!user) return;
         
         if (attendance.includes(meal)) {
             alert("You have already marked attendance for this meal today.");
             return;
         }
 
-        try {
-            await addDoc(collection(db, 'attendance'), {
-                uid: auth.currentUser.uid,
-                userName: auth.currentUser.displayName || auth.currentUser.email,
-                meal: meal,
-                status: 'present',
-                timestamp: serverTimestamp()
-            });
-        } catch (error) {
-            alert("Error marking attendance: " + error.message);
-        }
+        const newAttendance = [...attendance, meal];
+        setAttendance(newAttendance);
+        localStorage.setItem(`attendance_${user.uid}`, JSON.stringify(newAttendance));
     };
 
     if (loading) return <div>Loading traces...</div>;

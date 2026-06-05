@@ -1,38 +1,39 @@
 import React, { useState } from 'react';
-import { db, auth } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
 
 const FeedbackForm = () => {
+    const { user } = useAuth();
     const [rating, setRating] = useState(4);
     const [meal, setMeal] = useState('Breakfast');
     const [comments, setComments] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        if (!auth.currentUser) {
+        if (!user) {
             alert('You must be logged in to submit feedback.');
             return;
         }
         
         setSubmitting(true);
-        try {
-            await addDoc(collection(db, 'feedback'), {
-                uid: auth.currentUser.uid,
-                userName: auth.currentUser.displayName || auth.currentUser.email,
+        // Mock submission
+        setTimeout(() => {
+            const feedbacks = JSON.parse(localStorage.getItem('mockFeedbacks') || '[]');
+            feedbacks.push({
+                uid: user.uid,
+                userName: user.name || user.email,
                 meal,
                 rating,
                 comments,
-                timestamp: serverTimestamp()
+                timestamp: new Date().toISOString()
             });
+            localStorage.setItem('mockFeedbacks', JSON.stringify(feedbacks));
+            
             alert('Thank you for your feedback! It has been submitted successfully.');
             setComments('');
             setRating(4);
-        } catch (error) {
-            alert('Error submitting feedback: ' + error.message);
-        } finally {
             setSubmitting(false);
-        }
+        }, 500);
     };
 
     return (

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, setDoc, doc, onSnapshot } from 'firebase/firestore';
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -11,21 +9,18 @@ const MenuManagement = () => {
     const [editData, setEditData] = useState({});
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'weeklyMenu'), (snapshot) => {
-            const menuData = {};
-            snapshot.forEach(doc => {
-                menuData[doc.id] = doc.data();
-            });
-            // Fill in missing days
-            daysOfWeek.forEach(day => {
-                if (!menuData[day]) {
-                    menuData[day] = { breakfast: '', lunch: '', snacks: '', dinner: '' };
-                }
-            });
-            setMenu(menuData);
-            setLoading(false);
+        // Mock fetching menu from localStorage
+        const storedMenu = localStorage.getItem('mockWeeklyMenu');
+        const menuData = storedMenu ? JSON.parse(storedMenu) : {};
+        
+        // Fill in missing days
+        daysOfWeek.forEach(day => {
+            if (!menuData[day]) {
+                menuData[day] = { breakfast: '', lunch: '', snacks: '', dinner: '' };
+            }
         });
-        return () => unsubscribe();
+        setMenu(menuData);
+        setLoading(false);
     }, []);
 
     const handleEdit = (day) => {
@@ -33,14 +28,12 @@ const MenuManagement = () => {
         setEditData(menu[day] || { breakfast: '', lunch: '', snacks: '', dinner: '' });
     };
 
-    const handleSave = async (day) => {
-        try {
-            await setDoc(doc(db, 'weeklyMenu', day), editData);
-            setEditingDay(null);
-            alert(`Menu for ${day} updated successfully!`);
-        } catch (error) {
-            alert('Error updating menu: ' + error.message);
-        }
+    const handleSave = (day) => {
+        const newMenu = { ...menu, [day]: editData };
+        setMenu(newMenu);
+        localStorage.setItem('mockWeeklyMenu', JSON.stringify(newMenu));
+        setEditingDay(null);
+        alert(`Menu for ${day} updated successfully!`);
     };
 
     const handleChange = (e) => {

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../firebase';
-import { collection, doc, setDoc, onSnapshot, addDoc, query, orderBy, deleteDoc, where, getDoc } from 'firebase/firestore';
 import '../styles/AdminDashboard.css';
 
 const AdminDashboardPage = () => {
-    const { user, logout, changePassword, updateAdminProfile } = useAuth();
+    const { user, logout, changePassword } = useAuth();
     const [activeSection, setActiveSection] = useState('summary');
     const [menuData, setMenuData] = useState({});
     const [foods, setFoods] = useState([]);
@@ -28,93 +26,61 @@ const AdminDashboardPage = () => {
     const SPOONACULAR_API_KEY = "AQ.Ab8RN6LUupNVThTNpBRGLnXXLhNXOwzqVBa-XYcgwEIgNvicXQ";
 
     useEffect(() => {
-        // Real-time Weekly Menu
-        const unsubMenu = onSnapshot(collection(db, 'weeklyMenu'), (snapshot) => {
-            const data = {};
-            snapshot.forEach(doc => data[doc.id] = doc.data());
-            setMenuData(data);
-        });
+        // Mock Weekly Menu
+        const storedMenu = localStorage.getItem('mockWeeklyMenu');
+        if (storedMenu) setMenuData(JSON.parse(storedMenu));
 
-        // Real-time Foods list
-        const unsubFoods = onSnapshot(collection(db, 'foodInventory'), (snapshot) => {
-            const data = [];
-            snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-            setFoods(data);
-        });
+        // Mock Foods list
+        const storedFoods = localStorage.getItem('mockFoodInventory');
+        if (storedFoods) setFoods(JSON.parse(storedFoods));
 
-        // Real-time Feedback
-        const unsubFeedback = onSnapshot(query(collection(db, 'feedback'), orderBy('timestamp', 'desc')), (snapshot) => {
-            const data = [];
-            snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-            setFeedbacks(data);
-        });
+        // Mock Feedback
+        const storedFeedbacks = localStorage.getItem('mockFeedbacks');
+        if (storedFeedbacks) setFeedbacks(JSON.parse(storedFeedbacks).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
 
-        // Real-time Attendance (Today)
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const unsubAttendance = onSnapshot(query(collection(db, 'attendance'), where('timestamp', '>=', today)), (snapshot) => {
-            const data = [];
-            snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-            setAttendanceLogs(data);
-        });
+        // Mock Attendance (Today)
+        const storedAttendance = localStorage.getItem('mockAttendanceLogs');
+        if (storedAttendance) setAttendanceLogs(JSON.parse(storedAttendance));
 
-        // Fetch Meal Timing (Initial)
-        const fetchTiming = async () => {
-            const timeDoc = await getDoc(doc(db, 'settings', 'mealTiming'));
-            if (timeDoc.exists()) {
-                setTimeForm(timeDoc.data());
-            }
-            setLoading(false);
-        };
-        fetchTiming();
+        // Mock Meal Timing
+        const storedTiming = localStorage.getItem('mockMealTiming');
+        if (storedTiming) setTimeForm(JSON.parse(storedTiming));
 
-        return () => {
-            unsubMenu();
-            unsubFoods();
-            unsubFeedback();
-            unsubAttendance();
-        };
+        setLoading(false);
     }, []);
 
-    const handleSaveMenu = async () => {
-        try {
-            await setDoc(doc(db, 'weeklyMenu', menuForm.day), {
+    const handleSaveMenu = () => {
+        const newData = {
+            ...menuData,
+            [menuForm.day]: {
                 breakfast: menuForm.b,
                 lunch: menuForm.l,
                 snacks: menuForm.s,
                 dinner: menuForm.d
-            });
-            alert("Menu Saved Successfully");
-        } catch (err) {
-            alert("Error saving menu: " + err.message);
-        }
+            }
+        };
+        setMenuData(newData);
+        localStorage.setItem('mockWeeklyMenu', JSON.stringify(newData));
+        alert("Menu Saved Successfully (Local)");
     };
 
-    const handleAddFood = async () => {
+    const handleAddFood = () => {
         if (!foodInput.trim()) return;
-        try {
-            await addDoc(collection(db, 'foodInventory'), { name: foodInput.trim() });
-            setFoodInput('');
-        } catch (err) {
-            alert("Error adding food: " + err.message);
-        }
+        const newFoods = [...foods, { id: Date.now().toString(), name: foodInput.trim() }];
+        setFoods(newFoods);
+        localStorage.setItem('mockFoodInventory', JSON.stringify(newFoods));
+        setFoodInput('');
     };
 
-    const handleDeleteFood = async (id) => {
-        try {
-            await deleteDoc(doc(db, 'foodInventory', id));
-        } catch (err) {
-            alert("Error deleting food: " + err.message);
-        }
+    const handleDeleteFood = (id) => {
+        const newFoods = foods.filter(f => f.id !== id);
+        setFoods(newFoods);
+        localStorage.setItem('mockFoodInventory', JSON.stringify(newFoods));
     };
 
-    const handleSaveTime = async () => {
-        try {
-            await setDoc(doc(db, 'settings', 'mealTiming'), timeForm);
-            alert("Timing Saved Successfully");
-        } catch (err) {
-            alert("Error saving timing: " + err.message);
-        }
+    const handleSaveTime = () => {
+        localStorage.setItem('mockMealTiming', JSON.stringify(timeForm));
+        alert("Timing Saved Successfully (Local)");
     };
 
     const handleUpdatePassword = async () => {
@@ -123,7 +89,7 @@ const AdminDashboardPage = () => {
             alert("Password Updated Successfully");
             setPassForm({ oldP: '', newP: '' });
         } catch (err) {
-            alert("Error: " + err.message + ". Please re-login if needed.");
+            alert("Error: " + err.message);
         }
     };
 
@@ -187,7 +153,7 @@ const AdminDashboardPage = () => {
                         </div>
                         <div style={{ marginTop: '2rem', background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '14px' }}>
                             <h3>Quick Status</h3>
-                            <p style={{ color: 'var(--text-secondary)' }}>Welcome back, {user?.name || user?.displayName || 'Admin'}. The system is running optimally.</p>
+                            <p style={{ color: 'var(--text-secondary)' }}>Welcome back, {user?.name || 'Admin'}. The system is running optimally.</p>
                         </div>
                     </section>
                 );
@@ -269,7 +235,7 @@ const AdminDashboardPage = () => {
                                     <div>
                                         <strong>{log.userName}</strong> marked <strong>{log.meal}</strong> as {log.status}
                                     </div>
-                                    <small>{log.timestamp?.toDate().toLocaleTimeString()}</small>
+                                    <small>{new Date(log.timestamp).toLocaleTimeString()}</small>
                                 </li>
                             )) : <p>No attendance logs for today.</p>}
                         </div>
@@ -285,7 +251,7 @@ const AdminDashboardPage = () => {
                                 <div key={f.id} className="admin-result" style={{ marginBottom: '1rem' }}>
                                     <strong>{f.userName || 'Anonymous'}</strong> ({f.meal}) - {f.rating} Stars
                                     <p>{f.comments}</p>
-                                    <small>{f.timestamp?.toDate().toLocaleString()}</small>
+                                    <small>{new Date(f.timestamp).toLocaleString()}</small>
                                 </div>
                             ))}
                         </div>

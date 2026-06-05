@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
 
 const WeeklyMenu = () => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -16,21 +14,23 @@ const WeeklyMenu = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'weeklyMenu'), (snapshot) => {
-            const data = {};
-            snapshot.forEach(doc => {
-                const dayData = doc.data();
-                data[doc.id] = [
-                    { type: 'breakfast', icon: 'fa-egg', time: '08:30 AM - 09:00 AM', items: dayData.breakfast ? dayData.breakfast.split(',').map(i => i.trim()) : [] },
-                    { type: 'lunch', icon: 'fa-bread-slice', time: '01:00 PM - 02:00 PM', items: dayData.lunch ? dayData.lunch.split(',').map(i => i.trim()) : [] },
-                    { type: 'snacks', icon: 'fa-cookie', time: '05:30 PM - 06:30 PM', items: dayData.snacks ? dayData.snacks.split(',').map(i => i.trim()) : [] },
-                    { type: 'dinner', icon: 'fa-bowl-rice', time: '08:15 PM - 09:15 PM', items: dayData.dinner ? dayData.dinner.split(',').map(i => i.trim()) : [] }
-                ];
-            });
-            setWeeklyMenuData(data);
-            setLoading(false);
+        // Mock fetching menu from localStorage
+        const storedMenu = localStorage.getItem('mockWeeklyMenu');
+        const dayDataMap = storedMenu ? JSON.parse(storedMenu) : {};
+        
+        const formattedData = {};
+        Object.keys(dayDataMap).forEach(day => {
+            const dayData = dayDataMap[day];
+            formattedData[day] = [
+                { type: 'breakfast', icon: 'fa-egg', time: '08:30 AM - 09:00 AM', items: dayData.breakfast ? dayData.breakfast.split(',').map(i => i.trim()) : [] },
+                { type: 'lunch', icon: 'fa-bread-slice', time: '01:00 PM - 02:00 PM', items: dayData.lunch ? dayData.lunch.split(',').map(i => i.trim()) : [] },
+                { type: 'snacks', icon: 'fa-cookie', time: '05:30 PM - 06:30 PM', items: dayData.snacks ? dayData.snacks.split(',').map(i => i.trim()) : [] },
+                { type: 'dinner', icon: 'fa-bowl-rice', time: '08:15 PM - 09:15 PM', items: dayData.dinner ? dayData.dinner.split(',').map(i => i.trim()) : [] }
+            ];
         });
-        return () => unsubscribe();
+        
+        setWeeklyMenuData(formattedData);
+        setLoading(false);
     }, []);
 
     const menu = weeklyMenuData[selectedDay] || [
