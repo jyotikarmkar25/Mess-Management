@@ -3,151 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Campus Admin</title>
+    <title>Smart Campus Admin | Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-    <div id="loginBox" class="login">
-        <h2>Admin Login</h2>
-
-        <input id="user" placeholder="Username">
-        <input id="pass" type="password" placeholder="Password">
-
-        <button onclick="login()">Login</button>
-        <p id="msg"></p>
-    </div>
-
-    <div id="dashboard" style="display:none;">
-
-        <header>
-            <h1>Smart Campus Admin Dashboard</h1>
-        </header>
-
-        <div class="layout">
-
-            <div class="sidebar">
-                <button onclick="show('summary')">Summary</button>
-                <button onclick="show('menu')">Menu</button>
-                <button onclick="show('image')">Image AI</button>
-                <button onclick="show('time')">Timing</button>
-                <button onclick="show('feedback')">Feedback</button>
-                <button onclick="show('analytics')">Analytics</button>
-                <button onclick="show('password')">Password</button>
+    <div id="loginBox" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i data-lucide="shield-check" class="login-icon"></i>
+                <h2>Admin Portal</h2>
+                <p>Welcome back! Please login to your account.</p>
             </div>
 
-            <div class="main">
-
-                <section id="summary" class="card">
-                    <button onclick="goBack()">Back</button>
-                    <h2>Dashboard Summary</h2>
-
-                    <div class="stats">
-                        <div>Students: 150</div>
-                        <div>Attendance: 88%</div>
-                        <div>Rating: 4.6</div>
-                        <div>Foods: <span id="foodCount">0</span></div>
+            <div class="login-body">
+                <div class="input-group">
+                    <label for="user">Username</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="user"></i>
+                        <input id="user" placeholder="Enter username">
                     </div>
-                </section>
-
-                <section id="menu" class="card hidden">
-                    <button onclick="goBack()">Back</button>
-
-                    <h2>Weekly Menu System</h2>
-
-                    <select id="day" class = "rocky">
-                        <option>Monday</option>
-                        <option>Tuesday</option>
-                        <option>Wednesday</option>
-                        <option>Thursday</option>
-                        <option>Friday</option>
-                        <option>Saturday</option>
-                        <option>Sunday</option>
-                    </select>
-
-                    <input id="b" placeholder="Breakfast">
-                    <input id="l" placeholder="Lunch">
-                    <input id="d" placeholder="Dinner">
-
-                    <button onclick="saveMenu()">Save Menu</button>
-
-                    <div id="menuBox"></div>
-
-                    <hr>
-
-                    <input id="foodInput" placeholder="Add Food">
-                    <button onclick="addFood()">Add Food</button>
-
-                    <ul id="foodList"></ul>
-                </section>
-
-                <section id="image" class="card hidden">
-                    <button onclick="goBack()">Back</button>
-
-                    <h2> Food Image AI Analyzer</h2>
-
-                    <input type="file" id="img" accept="image/*">
-
-                    <button onclick="analyzeFood()"> Analyze Food</button>
-                    <button onclick="removeImage()"> Remove Image</button>
-
-                    <img id="preview" class="preview">
-
-                    <div id="result" class="result">
-                        Upload image and click analyze
+                </div>
+                <div class="input-group">
+                    <label for="pass">Password</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="lock"></i>
+                        <input id="pass" type="password" placeholder="Enter password">
                     </div>
-                </section>
-
-
-                <section id="time" class="card hidden">
-                    <button onclick="goBack()">Back</button>
-
-
-                    <h2>Meal Timing</h2>
-
-                    <input type="time" id="bt">
-                    <input type="time" id="lt">
-                    <input type="time" id="dt">
-
-                    <button onclick="saveTime()">Save</button>
-
-                    <div id="timeBox"></div>
-                </section>
-
-                <section id="feedback" class="card hidden">
-                    <button onclick="goBack()">Back</button>
-
-                    <h2>Feedback System</h2>
-
-                    <div id="feedbackList"></div>
-                </section>
-
-                <section id="analytics" class="card hidden">
-                    <button onclick="goBack()">Back</button>
-
-                    <h2>Analytics</h2>
-
-                </section>
-
-                <section id="password" class="card hidden">
-                <button onclick="goBack()">Back</button>
-
-                    <h2>Change Password</h2>
-
-                    <input id="oldP" type="password" placeholder="Old Password">
-                    <input id="newP" type="password" placeholder="New Password">
-
-                    <button onclick="changePass()">Update Password</button>
-
-                    <p id="passMsg"></p>
-                </section>
-
+                </div>
+                <button onclick="login()" class="btn-primary">
+                    <span>Login</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+                <p id="msg" class="error-msg"></p>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="dashboard" style="display:none;">
+        <div class="dashboard-wrapper">
+            <aside class="sidebar">
+                <div class="sidebar-brand">
+                    <i data-lucide="utensils-crossed"></i>
+                    <span>Smart Campus</span>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <button onclick="show('summary')" class="nav-item active" id="btn-summary">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Summary</span>
+                    </button>
+                    <button onclick="show('menu')" class="nav-item" id="btn-menu">
+                        <i data-lucide="calendar-days"></i>
+                        <span>Weekly Menu</span>
+                    </button>
+                    <button onclick="show('image')" class="nav-item" id="btn-image">
+                        <i data-lucide="image-upscale"></i>
+                        <span>Food AI</span>
+                    </button>
+                    <button onclick="show('time')" class="nav-item" id="btn-time">
+                        <i data-lucide="clock"></i>
+                        <span>Timings</span>
+                    </button>
+                    <button onclick="show('feedback')" class="nav-item" id="btn-feedback">
+                        <i data-lucide="message-square-quote"></i>
+                        <span>Feedback</span>
+                    </button>
+                    <button onclick="show('analytics')" class="nav-item" id="btn-analytics">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Analytics</span>
+                    </button>
+                    <button onclick="show('password')" class="nav-item" id="btn-password">
+                        <i data-lucide="key-round"></i>
+                        <span>Security</span>
+                    </button>
+                </nav>
 
+                <div class="sidebar-footer">
+                    <button onclick="location.reload()" class="logout-btn">
+                        <i data-lucide="log-out"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <header class="top-bar">
+                    <div class="page-title">
+                        <h1 id="current-page-title">Dashboard Summary</h1>
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar">AD</div>
+                        <span>Admin</span>
+                    </div>
+                </header>
+
+                <div class="content-area">
+                    <!-- Summary Section -->
+                    <section id="summary" class="dashboard-section">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i data-lucide="users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Total Students</span>
+                                    <span class="stat-value">150</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i data-lucide="check-circle-2"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Attendance</span>
+                                    <span class="stat-value">88%</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon yellow">
+                                    <i data-lucide="star"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Avg. Rating</span>
+                                    <span class="stat-value">4.6</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon purple">
+                                    <i data-lucide="apple"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Food Items</span>
+                                    <span id="foodCount" class="stat-value">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="quick-actions">
+                            <h3>Quick Actions</h3>
+                            <div class="action-buttons">
+                                <button onclick="show('menu')" class="action-btn">
+                                    <i data-lucide="plus-circle"></i> Update Menu
+                                </button>
+                                <button onclick="show('image')" class="action-btn">
+                                    <i data-lucide="scan-eye"></i> Analyze Food
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Menu Section -->
+                    <section id="menu" class="dashboard-section hidden">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i data-lucide="calendar"></i> Weekly Menu System</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Select Day</label>
+                                        <select id="day">
+                                            <option>Monday</option>
+                                            <option>Tuesday</option>
+                                            <option>Wednesday</option>
+                                            <option>Thursday</option>
+                                            <option>Friday</option>
+                                            <option>Saturday</option>
+                                            <option>Sunday</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Breakfast</label>
+                                        <input id="b" placeholder="What's for breakfast?">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Lunch</label>
+                                        <input id="l" placeholder="What's for lunch?">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Dinner</label>
+                                        <input id="d" placeholder="What's for dinner?">
+                                    </div>
+                                </div>
+                                <button onclick="saveMenu()" class="btn-primary">
+                                    <i data-lucide="save"></i> Save Menu
+                                </button>
+                                <div id="menuBox" class="status-msg"></div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-20">
+                            <div class="card-header">
+                                <h2><i data-lucide="package-plus"></i> Inventory / Food List</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="input-with-button">
+                                    <input id="foodInput" placeholder="Add new food item...">
+                                    <button onclick="addFood()" class="btn-secondary">Add Item</button>
+                                </div>
+                                <ul id="foodList" class="item-list"></ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Image AI Section -->
+                    <section id="image" class="dashboard-section hidden">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i data-lucide="brain-circuit"></i> Food Image AI Analyzer</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="upload-container">
+                                    <label for="img" class="upload-box">
+                                        <i data-lucide="cloud-upload"></i>
+                                        <span>Click to upload or drag image</span>
+                                        <input type="file" id="img" accept="image/*" hidden>
+                                    </label>
+                                </div>
+                                
+                                <div class="preview-actions">
+                                    <button onclick="analyzeFood()" class="btn-primary">
+                                        <i data-lucide="search"></i> Analyze Food
+                                    </button>
+                                    <button onclick="removeImage()" class="btn-outline">
+                                        <i data-lucide="trash-2"></i> Remove
+                                    </button>
+                                </div>
+
+                                <div class="image-preview-wrapper">
+                                    <img id="preview" class="preview-img">
+                                </div>
+
+                                <div id="result" class="ai-result-box">
+                                    Upload an image and click analyze to see details.
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Timing Section -->
+                    <section id="time" class="dashboard-section hidden">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i data-lucide="alarm-clock"></i> Meal Timing</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="time-grid">
+                                    <div class="form-group">
+                                        <label>Breakfast Time</label>
+                                        <input type="time" id="bt">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Lunch Time</label>
+                                        <input type="time" id="lt">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Dinner Time</label>
+                                        <input type="time" id="dt">
+                                    </div>
+                                </div>
+                                <button onclick="saveTime()" class="btn-primary">
+                                    <i data-lucide="save"></i> Save Timings
+                                </button>
+                                <div id="timeBox" class="time-display-box mt-20"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Feedback Section -->
+                    <section id="feedback" class="dashboard-section hidden">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i data-lucide="message-square"></i> Student Feedback</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="feedbackList" class="feedback-container">
+                                    <p class="empty-msg">No feedback received yet.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Analytics Section -->
+                    <section id="analytics" class="dashboard-section hidden">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i data-lucide="trending-up"></i> Performance Analytics</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="placeholder-analytics">
+                                    <i data-lucide="pie-chart" class="large-icon"></i>
+                                    <p>Advanced analytics charts will appear here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Security Section -->
+                    <section id="password" class="dashboard-section hidden">
+                        <div class="card max-w-500">
+                            <div class="card-header">
+                                <h2><i data-lucide="shield-alert"></i> Change Admin Password</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Current Password</label>
+                                    <input id="oldP" type="password" placeholder="••••••••">
+                                </div>
+                                <div class="form-group">
+                                    <label>New Password</label>
+                                    <input id="newP" type="password" placeholder="••••••••">
+                                </div>
+                                <button onclick="changePass()" class="btn-primary">
+                                    <i data-lucide="refresh-cw"></i> Update Password
+                                </button>
+                                <p id="passMsg" class="status-msg"></p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 </html>

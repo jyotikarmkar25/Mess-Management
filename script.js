@@ -19,10 +19,45 @@ function login() {
 
 
 function show(id) {
-  document.querySelectorAll(".main section").forEach(sec => {
+  // Hide all sections
+  document.querySelectorAll(".dashboard-section").forEach(sec => {
     sec.classList.add("hidden");
   });
-  document.getElementById(id).classList.remove("hidden");
+  
+  // Show selected section
+  const section = document.getElementById(id);
+  if (section) {
+    section.classList.remove("hidden");
+  }
+
+  // Update active state in sidebar
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.classList.remove("active");
+  });
+  const activeBtn = document.getElementById(`btn-${id}`);
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+
+  // Update Page Title
+  const titles = {
+    'summary': 'Dashboard Summary',
+    'menu': 'Weekly Menu System',
+    'image': 'Food Image AI Analyzer',
+    'time': 'Meal Timing Management',
+    'feedback': 'Student Feedback',
+    'analytics': 'Performance Analytics',
+    'password': 'Security Settings'
+  };
+  
+  const titleElem = document.getElementById("current-page-title");
+  if (titleElem && titles[id]) {
+    titleElem.innerText = titles[id];
+  }
+}
+
+function goBack() {
+    show('summary');
 }
 
 let foods = JSON.parse(localStorage.getItem("foods")) || [];
@@ -124,12 +159,7 @@ img.addEventListener("change", (e) => {
   result.innerHTML = " Image selected. Click Analyze button.";
 });
 
-function goBack() {
-    document.querySelectorAll(".main section").forEach(sec =>{
-        sec.classList.add("hidden");
-    });
-    document.getElementById("summary").classList.remove("hidden");
-}
+
 
 function removeImage() {
     const img = document.getElementById("preview");
