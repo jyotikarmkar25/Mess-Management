@@ -6,12 +6,13 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
+            const storedToken = localStorage.getItem('token');
+            if (!storedToken) {
                 setLoading(false);
                 return;
             }
@@ -19,17 +20,21 @@ export const AuthProvider = ({ children }) => {
             try {
                 const res = await fetch(`${API_URL}/auth/profile`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${storedToken}`
                     }
                 });
                 const data = await res.json();
                 if (res.ok) {
                     setUser(data.user);
+                    setToken(storedToken);
                 } else {
                     localStorage.removeItem('token');
+                    setToken(null);
                 }
             } catch (error) {
                 console.error("Error fetching profile:", error);
+                localStorage.removeItem('token');
+                setToken(null);
             } finally {
                 setLoading(false);
             }
@@ -47,7 +52,8 @@ export const AuthProvider = ({ children }) => {
         const data = await res.json();
         if (res.ok) {
             localStorage.setItem('token', data.token);
-            // Fetch profile immediately after login to get user details
+            setToken(data.token);
+            
             const profileRes = await fetch(`${API_URL}/auth/profile`, {
                 headers: { 'Authorization': `Bearer ${data.token}` }
             });
@@ -78,15 +84,16 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('token');
         setUser(null);
+        setToken(null);
     };
 
     const changePassword = async (oldPassword, newPassword) => {
-        const token = localStorage.getItem('token');
+        const storedToken = localStorage.getItem('token');
         const res = await fetch(`${API_URL}/auth/change-password`, {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${storedToken}`
             },
             body: JSON.stringify({ oldPassword, newPassword })
         });
@@ -96,7 +103,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, changePassword }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, logout, changePassword }}>
             {children}
         </AuthContext.Provider>
     );
