@@ -1,35 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { db, auth } from '../firebase';
-import { collection, addDoc, query, where, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const AttendanceTracker = () => {
+    const { token, user } = useAuth();
     const meals = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
     const [attendance, setAttendance] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const API_URL = 'http://localhost:5000/api/attendance';
+
     useEffect(() => {
-        if (!auth.currentUser) return;
-
-        const today = new Date();
-        today.setHours(0,0,0,0);
-
-        const q = query(
-            collection(db, 'attendance'),
-            where('uid', '==', auth.currentUser.uid),
-            where('timestamp', '>=', today)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(doc => doc.data().meal);
-            setAttendance(data);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
+        const fetchAttendance = async () => {
+            if (!token) return;
+            try {
+                const response = await axios.get(`${API_URL}/my-attendance`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                // Assuming backend returns attendance for today
+                setAttendance(response.data.map(log => log.meal));
+            } catch (error) {
+                console.error("Error fetching attendance:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAttendance();
+    }, [token]);
 
     const toggleStatus = async (meal) => {
-        if (!auth.currentUser) return;
+        if (!token) return;
         
         if (attendance.includes(meal)) {
             alert("You have already marked attendance for this meal today.");
@@ -37,15 +37,13 @@ const AttendanceTracker = () => {
         }
 
         try {
-            await addDoc(collection(db, 'attendance'), {
-                uid: auth.currentUser.uid,
-                userName: auth.currentUser.displayName || auth.currentUser.email,
-                meal: meal,
-                status: 'present',
-                timestamp: serverTimestamp()
+            await axios.post(`${API_URL}/mark`, { meal }, {
+                headers: { Authorization: `Bearer ${token}` }
             });
+            setAttendance([...attendance, meal]);
+            alert("Attendance marked successfully!");
         } catch (error) {
-            alert("Error marking attendance: " + error.message);
+            alert("Error marking attendance: " + (error.response?.data?.message || error.message));
         }
     };
 

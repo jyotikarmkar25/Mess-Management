@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const WeeklyMenu = () => {
+    const { token } = useAuth();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const now = new Date();
     const currentDayName = days[now.getDay()];
@@ -15,23 +16,35 @@ const WeeklyMenu = () => {
     const [weeklyMenuData, setWeeklyMenuData] = useState({});
     const [loading, setLoading] = useState(true);
 
+    const API_URL = 'http://localhost:5000/api/menus';
+
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'weeklyMenu'), (snapshot) => {
-            const data = {};
-            snapshot.forEach(doc => {
-                const dayData = doc.data();
-                data[doc.id] = [
-                    { type: 'breakfast', icon: 'fa-egg', time: '08:30 AM - 09:00 AM', items: dayData.breakfast ? dayData.breakfast.split(',').map(i => i.trim()) : [] },
-                    { type: 'lunch', icon: 'fa-bread-slice', time: '01:00 PM - 02:00 PM', items: dayData.lunch ? dayData.lunch.split(',').map(i => i.trim()) : [] },
-                    { type: 'snacks', icon: 'fa-cookie', time: '05:30 PM - 06:30 PM', items: dayData.snacks ? dayData.snacks.split(',').map(i => i.trim()) : [] },
-                    { type: 'dinner', icon: 'fa-bowl-rice', time: '08:15 PM - 09:15 PM', items: dayData.dinner ? dayData.dinner.split(',').map(i => i.trim()) : [] }
-                ];
-            });
-            setWeeklyMenuData(data);
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    }, []);
+        const fetchMenu = async () => {
+            if (!token) return;
+            try {
+                const response = await axios.get(`${API_URL}/all`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                const formattedData = {};
+                response.data.forEach(item => {
+                    formattedData[item.day] = [
+                        { type: 'breakfast', icon: 'fa-egg', time: '08:30 AM - 09:00 AM', items: item.breakfast ? item.breakfast.split(',').map(i => i.trim()) : [] },
+                        { type: 'lunch', icon: 'fa-bread-slice', time: '01:00 PM - 02:00 PM', items: item.lunch ? item.lunch.split(',').map(i => i.trim()) : [] },
+                        { type: 'snacks', icon: 'fa-cookie', time: '05:30 PM - 06:30 PM', items: item.snacks ? item.snacks.split(',').map(i => i.trim()) : [] },
+                        { type: 'dinner', icon: 'fa-bowl-rice', time: '08:15 PM - 09:15 PM', items: item.dinner ? item.dinner.split(',').map(i => i.trim()) : [] }
+                    ];
+                });
+                
+                setWeeklyMenuData(formattedData);
+            } catch (error) {
+                console.error("Error fetching menu:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMenu();
+    }, [token]);
 
     const menu = weeklyMenuData[selectedDay] || [
         { type: 'breakfast', icon: 'fa-egg', time: '08:30 AM - 09:00 AM', items: ['Not available'] },

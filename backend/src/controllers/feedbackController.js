@@ -1,4 +1,4 @@
-const Feedback = require("../models/Feedback");
+const Feedback = require("../models/feedback");
 
 
 // 1. Submit Feedback (Student)
