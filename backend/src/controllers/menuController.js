@@ -1,4 +1,4 @@
-const Menu = require("../models/Menu");
+const Menu = require("../models/menu");
 
 
 // 1. Create Menu (Admin + Image Upload)

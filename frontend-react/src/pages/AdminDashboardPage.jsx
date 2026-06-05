@@ -1,176 +1,83 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../firebase';
-import { collection, doc, setDoc, onSnapshot, addDoc, query, orderBy, deleteDoc, where, getDoc } from 'firebase/firestore';
+import axios from 'axios';
 import '../styles/AdminDashboard.css';
 
 const AdminDashboardPage = () => {
-    const { user, logout, changePassword, updateAdminProfile } = useAuth();
+    const { user, token, logout, changePassword } = useAuth();
     const [activeSection, setActiveSection] = useState('summary');
-    const [menuData, setMenuData] = useState({});
-    const [foods, setFoods] = useState([]);
+    const [menuData, setMenuData] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
     const [attendanceLogs, setAttendanceLogs] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // AI Analyzer State
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState('');
-    const [analyzeResult, setAnalyzeResult] = useState('');
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [menuForm, setMenuForm] = useState({ day: 'Monday', breakfast: '', lunch: '', snacks: '', dinner: '' });
+    const [passForm, setPassForm] = useState({ oldPassword: '', newPassword: '' });
 
-    // Form states
-    const [menuForm, setMenuForm] = useState({ day: 'Monday', b: '', l: '', s: '', d: '' });
-    const [foodInput, setFoodInput] = useState('');
-    const [timeForm, setTimeForm] = useState({ bt: '', lt: '', st: '', dt: '' });
-    const [passForm, setPassForm] = useState({ oldP: '', newP: '' });
-
-    const SPOONACULAR_API_KEY = "AQ.Ab8RN6LUupNVThTNpBRGLnXXLhNXOwzqVBa-XYcgwEIgNvicXQ";
+    const API_BASE = 'http://localhost:5000/api';
 
     useEffect(() => {
-        // Real-time Weekly Menu
-        const unsubMenu = onSnapshot(collection(db, 'weeklyMenu'), (snapshot) => {
-            const data = {};
-            snapshot.forEach(doc => data[doc.id] = doc.data());
-            setMenuData(data);
-        });
+        if (!token) return;
 
-        // Real-time Foods list
-        const unsubFoods = onSnapshot(collection(db, 'foodInventory'), (snapshot) => {
-            const data = [];
-            snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-            setFoods(data);
-        });
+        const fetchData = async () => {
+            try {
+                // Fetch All Menus
+                const menuRes = await axios.get(`${API_BASE}/menus/all`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setMenuData(menuRes.data);
 
-        // Real-time Feedback
-        const unsubFeedback = onSnapshot(query(collection(db, 'feedback'), orderBy('timestamp', 'desc')), (snapshot) => {
-            const data = [];
-            snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-            setFeedbacks(data);
-        });
+                // Fetch Feedbacks
+                const feedbackRes = await axios.get(`${API_BASE}/feedbacks/all`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setFeedbacks(feedbackRes.data);
 
-        // Real-time Attendance (Today)
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const unsubAttendance = onSnapshot(query(collection(db, 'attendance'), where('timestamp', '>=', today)), (snapshot) => {
-            const data = [];
-            snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-            setAttendanceLogs(data);
-        });
+                // Fetch Attendance (Today)
+                const attendanceRes = await axios.get(`${API_BASE}/attendance/all`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setAttendanceLogs(attendanceRes.data);
 
-        // Fetch Meal Timing (Initial)
-        const fetchTiming = async () => {
-            const timeDoc = await getDoc(doc(db, 'settings', 'mealTiming'));
-            if (timeDoc.exists()) {
-                setTimeForm(timeDoc.data());
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching admin data:", error);
+                setLoading(false);
             }
-            setLoading(false);
         };
-        fetchTiming();
 
-        return () => {
-            unsubMenu();
-            unsubFoods();
-            unsubFeedback();
-            unsubAttendance();
-        };
-    }, []);
+        fetchData();
+    }, [token]);
 
     const handleSaveMenu = async () => {
         try {
-            await setDoc(doc(db, 'weeklyMenu', menuForm.day), {
-                breakfast: menuForm.b,
-                lunch: menuForm.l,
-                snacks: menuForm.s,
-                dinner: menuForm.d
-            });
+            const existing = menuData.find(m => m.day === menuForm.day);
+            if (existing) {
+                await axios.put(`${API_BASE}/menus/update/${existing._id}`, menuForm, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            } else {
+                await axios.post(`${API_BASE}/menus/create`, menuForm, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
             alert("Menu Saved Successfully");
+            // Refresh data
+            const res = await axios.get(`${API_BASE}/menus/all`, { headers: { Authorization: `Bearer ${token}` } });
+            setMenuData(res.data);
         } catch (err) {
-            alert("Error saving menu: " + err.message);
-        }
-    };
-
-    const handleAddFood = async () => {
-        if (!foodInput.trim()) return;
-        try {
-            await addDoc(collection(db, 'foodInventory'), { name: foodInput.trim() });
-            setFoodInput('');
-        } catch (err) {
-            alert("Error adding food: " + err.message);
-        }
-    };
-
-    const handleDeleteFood = async (id) => {
-        try {
-            await deleteDoc(doc(db, 'foodInventory', id));
-        } catch (err) {
-            alert("Error deleting food: " + err.message);
-        }
-    };
-
-    const handleSaveTime = async () => {
-        try {
-            await setDoc(doc(db, 'settings', 'mealTiming'), timeForm);
-            alert("Timing Saved Successfully");
-        } catch (err) {
-            alert("Error saving timing: " + err.message);
+            alert("Error saving menu: " + (err.response?.data?.message || err.message));
         }
     };
 
     const handleUpdatePassword = async () => {
         try {
-            await changePassword(passForm.newP);
+            await changePassword(passForm.oldPassword, passForm.newPassword);
             alert("Password Updated Successfully");
-            setPassForm({ oldP: '', newP: '' });
+            setPassForm({ oldPassword: '', newPassword: '' });
         } catch (err) {
-            alert("Error: " + err.message + ". Please re-login if needed.");
+            alert("Error: " + err.message);
         }
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedImage(file);
-            setPreviewUrl(URL.createObjectURL(file));
-            setAnalyzeResult("Image selected. Click Analyze button.");
-        }
-    };
-
-    const analyzeFood = async () => {
-        if (!selectedImage) {
-            alert("Please select an image first");
-            return;
-        }
-        setIsAnalyzing(true);
-        setAnalyzeResult("Analyzing food image...");
-        
-        const formData = new FormData();
-        formData.append("file", selectedImage);
-
-        try {
-            const res = await fetch(`https://api.spoonacular.com/food/images/analyze?apiKey=${SPOONACULAR_API_KEY}`, {
-                method: "POST",
-                body: formData
-            });
-            const data = await res.json();
-            setAnalyzeResult(`
-                <h3>Food Detected</h3>
-                <p>Name: ${data.category?.name || "Unknown"}</p>
-                <p>Confidence: ${data.category?.probability.toFixed(2) || "N/A"}</p>
-                <hr>
-                <p>This API detects food type only. For calories/protein → use Nutrition API</p>
-            `);
-        } catch (err) {
-            setAnalyzeResult("API Error or Invalid Key");
-        } finally {
-            setIsAnalyzing(false);
-        }
-    };
-
-    const removeImage = () => {
-        setSelectedImage(null);
-        setPreviewUrl('');
-        setAnalyzeResult("Image removed. Upload again to analyze.");
     };
 
     const renderSection = () => {
@@ -180,14 +87,13 @@ const AdminDashboardPage = () => {
                     <section className="admin-card">
                         <h2>Dashboard Summary</h2>
                         <div className="admin-stats">
-                            <div>Total Students: 150</div>
+                            <div>Total Feedbacks: {feedbacks.length}</div>
                             <div>Today's Attendance: {attendanceLogs.length}</div>
-                            <div>Avg Rating: 4.6</div>
-                            <div>Inventory Items: {foods.length}</div>
+                            <div>Menu Items: {menuData.length}</div>
                         </div>
                         <div style={{ marginTop: '2rem', background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '14px' }}>
                             <h3>Quick Status</h3>
-                            <p style={{ color: 'var(--text-secondary)' }}>Welcome back, {user?.name || user?.displayName || 'Admin'}. The system is running optimally.</p>
+                            <p style={{ color: 'var(--text-secondary)' }}>Welcome back, {user?.name || 'Admin'}. The system is running optimally.</p>
                         </div>
                     </section>
                 );
@@ -205,73 +111,27 @@ const AdminDashboardPage = () => {
                             <option>Saturday</option>
                             <option>Sunday</option>
                         </select>
-                        <input className="admin-input" placeholder="Breakfast" value={menuForm.b} onChange={e => setMenuForm({...menuForm, b: e.target.value})} />
-                        <input className="admin-input" placeholder="Lunch" value={menuForm.l} onChange={e => setMenuForm({...menuForm, l: e.target.value})} />
-                        <input className="admin-input" placeholder="Evening Snacks" value={menuForm.s} onChange={e => setMenuForm({...menuForm, s: e.target.value})} />
-                        <input className="admin-input" placeholder="Dinner" value={menuForm.d} onChange={e => setMenuForm({...menuForm, d: e.target.value})} />
+                        <input className="admin-input" placeholder="Breakfast" value={menuForm.breakfast} onChange={e => setMenuForm({...menuForm, breakfast: e.target.value})} />
+                        <input className="admin-input" placeholder="Lunch" value={menuForm.lunch} onChange={e => setMenuForm({...menuForm, lunch: e.target.value})} />
+                        <input className="admin-input" placeholder="Evening Snacks" value={menuForm.snacks} onChange={e => setMenuForm({...menuForm, snacks: e.target.value})} />
+                        <input className="admin-input" placeholder="Dinner" value={menuForm.dinner} onChange={e => setMenuForm({...menuForm, dinner: e.target.value})} />
                         <button className="admin-btn" onClick={handleSaveMenu}>Save Menu</button>
-                        
-                        <div style={{ marginTop: '2rem' }}>
-                            <input className="admin-input" placeholder="Add Food to Inventory" value={foodInput} onChange={e => setFoodInput(e.target.value)} />
-                            <button className="admin-btn" onClick={handleAddFood}>Add Food</button>
-                            <ul className="admin-list" style={{ marginTop: '1rem' }}>
-                                {foods.map(food => (
-                                    <li key={food.id}>
-                                        {food.name}
-                                        <button className="admin-btn secondary" style={{ width: 'auto', padding: '4px 10px' }} onClick={() => handleDeleteFood(food.id)}>delete</button>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </section>
-                );
-            case 'image':
-                return (
-                    <section className="admin-card">
-                        <button className="admin-btn secondary" style={{ width: 'auto', marginBottom: '1rem' }} onClick={() => setActiveSection('summary')}>Back</button>
-                        <h2>Food Image AI Analyzer</h2>
-                        <input type="file" className="admin-input" onChange={handleImageChange} accept="image/*" />
-                        <button className="admin-btn" onClick={analyzeFood} disabled={isAnalyzing}>Analyze Food</button>
-                        <button className="admin-btn secondary" onClick={removeImage}>Remove Image</button>
-                        {previewUrl && <img src={previewUrl} alt="Preview" className="admin-preview" />}
-                        <div className="admin-result" dangerouslySetInnerHTML={{ __html: analyzeResult }}></div>
-                    </section>
-                );
-            case 'time':
-                return (
-                    <section className="admin-card">
-                        <button className="admin-btn secondary" style={{ width: 'auto', marginBottom: '1rem' }} onClick={() => setActiveSection('summary')}>Back</button>
-                        <h2>Meal Timing</h2>
-                        <label>Breakfast Time</label>
-                        <input type="time" className="admin-input" value={timeForm.bt} onChange={e => setTimeForm({...timeForm, bt: e.target.value})} />
-                        <label>Lunch Time</label>
-                        <input type="time" className="admin-input" value={timeForm.lt} onChange={e => setTimeForm({...timeForm, lt: e.target.value})} />
-                        <label>Evening Snacks Time</label>
-                        <input type="time" className="admin-input" value={timeForm.st} onChange={e => setTimeForm({...timeForm, st: e.target.value})} />
-                        <label>Dinner Time</label>
-                        <input type="time" className="admin-input" value={timeForm.dt} onChange={e => setTimeForm({...timeForm, dt: e.target.value})} />
-                        <button className="admin-btn" onClick={handleSaveTime}>Save Timing</button>
-                        <div className="admin-result">
-                            Current Configuration: <br/>
-                            Breakfast: {timeForm.bt || 'Not Set'} | Lunch: {timeForm.lt || 'Not Set'} <br/>
-                            Snacks: {timeForm.st || 'Not Set'} | Dinner: {timeForm.dt || 'Not Set'}
-                        </div>
                     </section>
                 );
             case 'attendance':
                 return (
                     <section className="admin-card">
                         <button className="admin-btn secondary" style={{ width: 'auto', marginBottom: '1rem' }} onClick={() => setActiveSection('summary')}>Back</button>
-                        <h2>Student Attendance Logs (Today)</h2>
+                        <h2>Student Attendance Logs</h2>
                         <div className="admin-list">
                             {attendanceLogs.length > 0 ? attendanceLogs.map(log => (
-                                <li key={log.id}>
+                                <li key={log._id}>
                                     <div>
-                                        <strong>{log.userName}</strong> marked <strong>{log.meal}</strong> as {log.status}
+                                        <strong>{log.user?.name || 'User'}</strong> marked <strong>{log.meal}</strong> as {log.status}
                                     </div>
-                                    <small>{log.timestamp?.toDate().toLocaleTimeString()}</small>
+                                    <small>{new Date(log.date).toLocaleDateString()} {log.time}</small>
                                 </li>
-                            )) : <p>No attendance logs for today.</p>}
+                            )) : <p>No attendance logs found.</p>}
                         </div>
                     </section>
                 );
@@ -282,36 +142,12 @@ const AdminDashboardPage = () => {
                         <h2>Student Feedback</h2>
                         <div className="admin-list">
                             {feedbacks.map(f => (
-                                <div key={f.id} className="admin-result" style={{ marginBottom: '1rem' }}>
-                                    <strong>{f.userName || 'Anonymous'}</strong> ({f.meal}) - {f.rating} Stars
+                                <div key={f._id} className="admin-result" style={{ marginBottom: '1rem' }}>
+                                    <strong>{f.user?.name || 'Anonymous'}</strong> ({f.meal}) - {f.rating} Stars
                                     <p>{f.comments}</p>
-                                    <small>{f.timestamp?.toDate().toLocaleString()}</small>
+                                    <small>{new Date(f.createdAt).toLocaleString()}</small>
                                 </div>
                             ))}
-                        </div>
-                    </section>
-                );
-            case 'analytics':
-                return (
-                    <section className="admin-card">
-                        <button className="admin-btn secondary" style={{ width: 'auto', marginBottom: '1rem' }} onClick={() => setActiveSection('summary')}>Back</button>
-                        <h2>Usage Analytics</h2>
-                        <div className="admin-result">
-                            <h3>Weekly Attendance Trends</h3>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', height: '150px', marginTop: '1rem' }}>
-                                {[65, 80, 45, 90, 70, 85, 30].map((h, i) => (
-                                    <div key={i} style={{ flex: 1, background: 'var(--primary)', height: `${h}%`, borderRadius: '4px 4px 0 0' }}></div>
-                                ))}
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '0.5rem' }}>
-                                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                            </div>
-                        </div>
-                        <div className="admin-result" style={{ marginTop: '1rem' }}>
-                            <h3>Meal Satisfaction</h3>
-                            <p>Breakfast: 4.2/5</p>
-                            <p>Lunch: 3.8/5</p>
-                            <p>Dinner: 4.5/5</p>
                         </div>
                     </section>
                 );
@@ -321,7 +157,8 @@ const AdminDashboardPage = () => {
                         <button className="admin-btn secondary" style={{ width: 'auto', marginBottom: '1rem' }} onClick={() => setActiveSection('summary')}>Back</button>
                         <h2>Account Security</h2>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Update your administrative password.</p>
-                        <input className="admin-input" type="password" placeholder="New Password" value={passForm.newP} onChange={e => setPassForm({...passForm, newP: e.target.value})} />
+                        <input className="admin-input" type="password" placeholder="Old Password" value={passForm.oldPassword} onChange={e => setPassForm({...passForm, oldPassword: e.target.value})} />
+                        <input className="admin-input" type="password" placeholder="New Password" value={passForm.newPassword} onChange={e => setPassForm({...passForm, newPassword: e.target.value})} />
                         <button className="admin-btn" onClick={handleUpdatePassword}>Update Password</button>
                     </section>
                 );
@@ -329,6 +166,8 @@ const AdminDashboardPage = () => {
                 return <section className="admin-card"><h2>Feature Coming Soon</h2></section>;
         }
     };
+
+    if (loading) return <div style={{ color: 'white', padding: '2rem' }}>Loading Admin Panel...</div>;
 
     return (
         <div className="admin-body">
@@ -341,11 +180,8 @@ const AdminDashboardPage = () => {
                 <div className="admin-sidebar">
                     <button className={activeSection === 'summary' ? 'active' : ''} onClick={() => setActiveSection('summary')}>Summary</button>
                     <button className={activeSection === 'menu' ? 'active' : ''} onClick={() => setActiveSection('menu')}>Menu</button>
-                    <button className={activeSection === 'image' ? 'active' : ''} onClick={() => setActiveSection('image')}>Image AI</button>
-                    <button className={activeSection === 'time' ? 'active' : ''} onClick={() => setActiveSection('time')}>Timing</button>
                     <button className={activeSection === 'attendance' ? 'active' : ''} onClick={() => setActiveSection('attendance')}>Attendance</button>
                     <button className={activeSection === 'feedback' ? 'active' : ''} onClick={() => setActiveSection('feedback')}>Feedback</button>
-                    <button className={activeSection === 'analytics' ? 'active' : ''} onClick={() => setActiveSection('analytics')}>Analytics</button>
                     <button className={activeSection === 'password' ? 'active' : ''} onClick={() => setActiveSection('password')}>Security</button>
                 </div>
 

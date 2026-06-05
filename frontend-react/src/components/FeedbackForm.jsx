@@ -1,35 +1,37 @@
 import React, { useState } from 'react';
-import { db, auth } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const FeedbackForm = () => {
+    const { token } = useAuth();
     const [rating, setRating] = useState(4);
     const [meal, setMeal] = useState('Breakfast');
     const [comments, setComments] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    const API_URL = 'http://localhost:5000/api/feedbacks';
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!auth.currentUser) {
+        if (!token) {
             alert('You must be logged in to submit feedback.');
             return;
         }
         
         setSubmitting(true);
         try {
-            await addDoc(collection(db, 'feedback'), {
-                uid: auth.currentUser.uid,
-                userName: auth.currentUser.displayName || auth.currentUser.email,
+            await axios.post(`${API_URL}/create`, {
                 meal,
                 rating,
-                comments,
-                timestamp: serverTimestamp()
+                comments
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
             });
             alert('Thank you for your feedback! It has been submitted successfully.');
             setComments('');
             setRating(4);
         } catch (error) {
-            alert('Error submitting feedback: ' + error.message);
+            alert('Error submitting feedback: ' + (error.response?.data?.message || error.message));
         } finally {
             setSubmitting(false);
         }

@@ -1,136 +1,109 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-    onAuthStateChanged, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signOut,
-    GoogleAuthProvider,
-    signInWithPopup,
-    updatePassword
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
 
 const AuthContext = createContext();
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                try {
-                    // Check if user is admin
-                    const adminDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
-                    if (adminDoc.exists()) {
-                        setUser({ 
-                            uid: firebaseUser.uid, 
-                            email: firebaseUser.email, 
-                            displayName: firebaseUser.displayName,
-                            role: 'admin', 
-                            ...adminDoc.data() 
-                        });
-                    } else {
-                        // Check if user is regular user
-                        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-                        if (userDoc.exists()) {
-                            setUser({ 
-                                uid: firebaseUser.uid, 
-                                email: firebaseUser.email, 
-                                displayName: firebaseUser.displayName,
-                                role: 'user', 
-                                ...userDoc.data() 
-                            });
-                        } else {
-                            // Default to user role if doc doesn't exist yet
-                            setUser({ 
-                                uid: firebaseUser.uid, 
-                                email: firebaseUser.email, 
-                                displayName: firebaseUser.displayName,
-                                role: 'user' 
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error fetching user role:", error);
-                    setUser({ uid: firebaseUser.uid, email: firebaseUser.email, role: 'user' });
-                }
-            } else {
-                setUser(null);
+        const fetchProfile = async () => {
+            const storedToken = localStorage.getItem('token');
+            if (!storedToken) {
+                setLoading(false);
+                return;
             }
-            setLoading(false);
-        });
 
-        return () => unsubscribe();
+            try {
+                const res = await fetch(`${API_URL}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${storedToken}`
+                    }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data.user);
+                    setToken(storedToken);
+                } else {
+                    localStorage.removeItem('token');
+                    setToken(null);
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+                localStorage.removeItem('token');
+                setToken(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
     }, []);
 
-    const login = (email, password) => {
-        return signInWithEmailAndPassword(auth, email, password);
-    };
-
-    const loginWithGoogle = async () => {
-        const provider = new GoogleAuthProvider();
-        try {
-            const result = await signInWithPopup(auth, provider);
-            const firebaseUser = result.user;
+    const login = async (email, password) => {
+        const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('token', data.token);
+            setToken(data.token);
             
-            // Check if user doc exists, if not create it
-            const adminDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-            
-            if (!adminDoc.exists() && !userDoc.exists()) {
-                const userData = {
-                    uid: firebaseUser.uid,
-                    name: firebaseUser.displayName,
-                    email: firebaseUser.email,
-                    role: 'user',
-                    createdAt: new Date().toISOString()
-                };
-                await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-                // Manually update local state to ensure immediate availability
-                setUser(prev => ({ ...prev, ...userData }));
+            const profileRes = await fetch(`${API_URL}/auth/profile`, {
+                headers: { 'Authorization': `Bearer ${data.token}` }
+            });
+            const profileData = await profileRes.json();
+            if (profileRes.ok) {
+                setUser(profileData.user);
             }
-            return result;
-        } catch (error) {
-            console.error("Google login error", error);
-            throw error;
+            return data;
+        } else {
+            throw new Error(data.message || 'Login failed');
         }
     };
 
     const register = async (email, password, name) => {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        const firebaseUser = result.user;
-        
-        const userData = {
-            uid: firebaseUser.uid,
-            name: name,
-            email: email,
-            role: 'user',
-            createdAt: new Date().toISOString()
-        };
-        await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-        return result;
+        const res = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, name, role: 'student' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            return data;
+        } else {
+            throw new Error(data.message || 'Registration failed');
+        }
     };
 
     const logout = () => {
-        return signOut(auth);
+        localStorage.removeItem('token');
+        setUser(null);
+        setToken(null);
     };
 
-    const changePassword = (newPass) => {
-        if (!auth.currentUser) throw new Error("No user logged in");
-        return updatePassword(auth.currentUser, newPass);
-    };
-
-    const updateAdminProfile = async (data) => {
-        if (!auth.currentUser) throw new Error("No user logged in");
-        const userRef = user.role === 'admin' ? doc(db, 'admins', auth.currentUser.uid) : doc(db, 'users', auth.currentUser.uid);
-        await setDoc(userRef, data, { merge: true });
-        setUser(prev => ({ ...prev, ...data }));
+    const changePassword = async (oldPassword, newPassword) => {
+        const storedToken = localStorage.getItem('token');
+        const res = await fetch(`${API_URL}/auth/change-password`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${storedToken}`
+            },
+            body: JSON.stringify({ oldPassword, newPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to change password');
+        return data;
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, changePassword, updateAdminProfile }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, logout, changePassword }}>
             {children}
         </AuthContext.Provider>
     );

@@ -7,7 +7,7 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login, loginWithGoogle } = useAuth();
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -26,16 +26,6 @@ const LoginPage = () => {
             setError('Failed to log in: ' + err.message);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleGoogleLogin = async () => {
-        setError('');
-        try {
-            await loginWithGoogle();
-            navigate('/dashboard');
-        } catch (err) {
-            setError('Google login failed: ' + err.message);
         }
     };
 
@@ -120,38 +110,6 @@ const LoginPage = () => {
                     transform: translateY(-2px);
                     filter: brightness(1.1);
                 }
-                .google-btn {
-                    background: white;
-                    color: #1e293b;
-                    border: none;
-                    padding: 0.9rem;
-                    border-radius: 14px;
-                    width: 100%;
-                    font-weight: 700;
-                    cursor: pointer;
-                    margin-top: 1rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                }
-                .divider {
-                    display: flex;
-                    align-items: center;
-                    margin: 1.5rem 0;
-                    color: #64748b;
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                }
-                .divider::before, .divider::after {
-                    content: '';
-                    flex: 1;
-                    height: 1px;
-                    background: rgba(255, 255, 255, 0.1);
-                }
-                .divider:before { margin-right: 1rem; }
-                .divider:after { margin-left: 1rem; }
-                
                 .auth-link {
                     text-align: center;
                     margin-top: 2rem;
@@ -188,13 +146,6 @@ const LoginPage = () => {
                         {loading ? 'Logging in...' : 'Sign In'}
                     </button>
                 </form>
-                
-                <div className="divider">OR</div>
-                
-                <button onClick={handleGoogleLogin} className="google-btn">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" />
-                    Sign in with Google
-                </button>
                 
                 <div className="auth-link">
                     Don't have an account? <Link to="/register">Register here</Link>
